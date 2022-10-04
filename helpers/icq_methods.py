@@ -35,6 +35,8 @@ def get_U_operator(sigmaQ, sigmaE):
         Makes the exponential matrix of tensor product between sigmaQ and sigmaE and multiplies it by j. 
         Equivalent of Equation #15 in the Article.
     """
+    sigmaQ[np.isnan(sigmaQ)] = 0
+    sigmaE[np.isnan(sigmaE)] = 0
     return np.matrix(expMatrix(1j*np.kron(sigmaQ, sigmaE)))
 
 def get_p(psi):
@@ -99,12 +101,13 @@ def update_weights(weights, y, z, x, p, n):
     y is the expected classification [0, 1];
     z is the actual classification [0, 1];
     x is the attribute vector;
-    p is the probability of the class 1 (0, 1);
+    p is the probability of the class 1 (0, 1), powered to 2 (p²);
     n is the learning rate.
   """
   # Eq 33
-  loss_derivative_on_weight = (1-(p**2))*x
+  loss_derivative_on_weight = (1-p)*x
 
   # Eq 34
   weights = weights-n*(z-y)*loss_derivative_on_weight
+  weights[np.isnan(weights)] = 0
   return weights
