@@ -29,7 +29,7 @@ def executeIris(random_seed = 1,
     y = iris.target
 
     # split training set and test set
-    skf = StratifiedKFold(n_splits=K_FOLDS)
+    skf = StratifiedKFold(n_splits=K_FOLDS, random_state=random_seed)
 
     scores = []
     f1scores = []
