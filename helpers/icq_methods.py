@@ -120,7 +120,7 @@ def create_and_execute_classifier_new_approach(vector_x,
     # Eq #19 applied on a Quantum state equivalent of Hadamard(|00...0>) = 1/sqrt(N) * (|00...0> + ... + |11...1>)
     if split_input_weight:
         # We can either have Hadamard applied to each instance attribute...
-        p_env = get_p([[vector_x_i]*(1/np.sqrt(N)) for vector_x_i in vector_x])
+        p_env = get_p([[vector_x_i*(1/np.sqrt(N))] for vector_x_i in vector_x])
     else:
         # ... or have as the original ICQ: Hadamard applied to a |00...0> gate
         p_env = get_p([[1/np.sqrt(N)] for _ in range(N)])

@@ -18,7 +18,7 @@ def OriginalClassifier(max_iter = 1000, success_rate=1.0, learning_rate=0.01, pl
             classifier_function=create_and_execute_classifier, 
             sigma_q_weights = [1,1,1,0],
             max_iter=max_iter,
-            rate_succ=success_rate,
+            accuracy_succ=success_rate,
             learning_rate=learning_rate,
             plot_graphs_and_metrics=plot_graphs_and_metrics,
             random_seed=RANDOM_SEED,
@@ -34,4 +34,4 @@ def InputsOnEnvClassifier(max_iter = 1000, success_rate=1.0, sigma_q_weights=[1,
             classifier_function=create_and_execute_classifier_new_approach, 
             sigma_q_weights = sigma_q_weights,
             max_iter=max_iter,
-            rate_succ=success_rate)
+            accuracy_succ=success_rate)
