@@ -13,101 +13,164 @@ from sklearn.utils.multiclass import unique_labels
 
 
 class IcqClassifier(ClassifierMixin, BaseEstimator):
+    """
+        Returns an Scikit-Learn based estimator that uses ICQ classificator (https://ieeexplore.ieee.org/document/9533917) to classify instances.
+
+        It estimates only binary classifications. For multi-class problems, you can use e.g. sklearn.multiclass.OneVsOneClassifier or sklearn.multiclass.OneVsRestClassifier.
+
+        Attributes:
+            classifier_function (fun): either ../helpers/icq_methods.create_and_execute_classifier or ../helpers/icq_methods.create_and_execute_classifier_new_approach.
+
+            accuracy_succ (float): accuracy considered as successful training.
+
+            sigma_q_weights (4 sized array): weights for sigma Q sum. See ../helpers/icq_methods.get_weighted_sigmaQ for more info.
+
+            max_iter (int): max number of training epochs.
+
+            reset_weights_epoch (int): max amount of epochs that a random weight should be trained. If reached, it will reset the weights to random numbers again and will keep training. If set to 0, it will never be reset.
+
+            learning_accuracy (float): weights' learning accuracy.
+
+            plot_graphs_and_metrics (boolean): prints training best weights, accuracy and epoch x accuracy graph.
+
+            accuracys_during_training_ (array): accuracy throughout the training.
+
+            X_ (array of arrays): instances attributes used for training.
+
+            Y_ (array): instances classes used for training.
+
+            weight_ (array): best weights from training.
+
+            accuracy_ (float): best accuracy from training.
+    """
     def __init__(self, 
                  classifier_function, 
-                 rate_succ=0.2, 
+                 accuracy_succ=0.2, 
                  sigma_q_weights=None, 
                  max_iter=1000, 
-                 reset_weights=1000,
+                 reset_weights_epoch=0,
                  random_seed=1,
-                 learning_rate=0.01,
+                 learning_accuracy=0.01,
                  plot_graphs_and_metrics = True):
-        self.rate_succ = rate_succ
+        self.accuracy_succ = accuracy_succ
         self.classifier_function = classifier_function
         self.max_iter = max_iter
         self.sigma_q_weights = sigma_q_weights
-        self.reset_weights = reset_weights
+        self.reset_weights_epoch = reset_weights_epoch
         self.random_seed = random_seed
-        self.learning_rate = learning_rate
+        self.learning_accuracy = learning_accuracy
         self.plot_graphs_and_metrics = plot_graphs_and_metrics
 
     def fit(self, X, y):
+        """
+            Trains the ICQ classifier using X as instances attributes and y as instances classes.
+
+            To have a fair training, it replicates the minority class to have the same number of instances as the majority class. See ../helpers/database_helpers.replicate_classes for more info or to change the replication approach.
+
+            X: N x M matrix, where M is the number of attributes and N is the number of instances.
+            y: N sized array of 0s or 1s values, where N is the number of instances.
+
+            Returns the trained classifier.
+        """
+        # Setting random seed to have always same result
         np.random.seed(self.random_seed)
         
+        # Replicates classes to have same number of 0s and 1s examples
         X,y = replicate_classes(X, y)
             
-        # Check that X and y have correct shape
+        # Check that X and y have correct shape (i.e. same amount of examples)
         X, y = check_X_y(X, y)
 
         # Store the classes seen during fit
         self.classes_ = unique_labels(y)
         
+        # Creates weights based on a [-1, 1] uniform distribution
         low  = -1
         high = 1
         dimensions = len(X[0])
-
-        rate = 0
-        
         weight = np.random.uniform(low=low, high=high, size=(dimensions,))
         
         ITERATION = 0
+        best_weight = []
+        best_accuracy = 0.0
+        accuracy = 0
+        self.accuracy_during_training_ = []
         
-        bestWeight = []
-        bestRate = 0.0
-        self.ratesDuringTraining = []
-        
-        while rate < self.rate_succ and ITERATION < self.max_iter:
-            rate = 0
-            # training step
+        # Executing the training itself
+        while accuracy < self.accuracy_succ and ITERATION < self.max_iter:
+            accuracy = 0
+
+            # Training step
             for x_train, y_train in zip(X, y):
+                # Execute the classifier with the weights we have now...
                 z, p_cog, _ = self.classifier_function(x_train, weight, self.sigma_q_weights)
-                weight = update_weights(weight, y_train, z, x_train, p_cog, n=self.learning_rate)
+
+                # Update weights based on the result
+                weight = update_weights(weight, y_train, z, x_train, p_cog, n=self.learning_accuracy)
                 
+            # After executing everything and updating the weights for the whole set example, we compute current accuracy
             for x_train, y_train in zip(X, y):
+                # Classify using current weight...
                 z, p_cog, _ = self.classifier_function(x_train, weight, self.sigma_q_weights)            
+                
+                # ... and checks if we got it right
                 if z == y_train:
-                    rate +=1
+                    accuracy +=1
             
-            rate = rate/len(X)
-            self.ratesDuringTraining.append(rate)
+            # Computing actual accuracy...
+            accuracy = accuracy/len(X)
+            self.accuracy_during_training_.append(accuracy)
             ITERATION += 1
-            if (rate >= bestRate):
-                bestWeight = weight
-                bestRate = rate
-            if ITERATION % self.reset_weights == 0:
+
+            # ... and checking if this is the best one so far
+            if (accuracy >= best_accuracy):
+                best_weight = weight
+                best_accuracy = accuracy
+
+            # In case reset weights is defined 
+            if self.reset_weights_epoch != 0 and ITERATION % self.reset_weights_epoch == 0:
                 weight = np.random.uniform(low=low, high=high, size=(dimensions,))
             
-        self.rate = bestRate
-        self.weight_ = bestWeight
+        self.accuracy_ = best_accuracy
+        self.weight_ = best_weight
         self.X_ = X
         self.y_ = y
         
         if self.plot_graphs_and_metrics:
-            print("best weight", bestWeight)
-            print("best rate", bestRate)
-            plot_graph(range(ITERATION), self.ratesDuringTraining , "iter", "rate")
+            print("best weight", best_weight)
+            print("best accuracy", best_accuracy)
+            plot_graph(range(ITERATION), self.accuracy_during_training_ , "epoch", "accuracy")
         
         # Return the classifier
         return self
 
     def predict(self, X):
+        """
+            Returns the predicted class for each X instance - either 0 or 1.
+        """
         # Check is fit had been called
         check_is_fitted(self, ['X_', 'y_', 'weight_'])
 
         # Input validation
         X = check_array(X)
         
+        # Classifies each instance
         outputs = []
         for x in X:                   
             z, _, _ = self.classifier_function(x, self.weight_, self.sigma_q_weights)
             outputs.append(z)
-                               
+
+        # Returns either 0 or 1      
         return outputs
 
     def predict_proba(self, X):
+        """
+            Returns the probability of each instance being of each class - either 0 or 1.
+        """
         outputs = []
         for x in X:                   
             _, p_cog, _ = self.classifier_function(x, self.weight_, self.sigma_q_weights)
             outputs.append([1-p_cog.real, p_cog.real])
-                               
+
+        # Returns the probability of being either 0 or 1           
         return np.array(outputs)

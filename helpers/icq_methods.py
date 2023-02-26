@@ -35,6 +35,7 @@ def get_weighted_sigmaQ(param):
 def get_U_operator(sigmaQ, sigmaE):
     """
         Makes the exponential matrix of tensor product between sigmaQ and sigmaE and multiplies it by j. 
+        
         Equivalent of Equation #15 in the Article.
     """
     sigmaQ[np.isnan(sigmaQ)] = 0
@@ -43,44 +44,46 @@ def get_U_operator(sigmaQ, sigmaE):
 
 def get_p(psi):
     """
-        Creates a matrix out of psi and multiply it against its inverse, 
-        resulting in a column vector in the form [[alfa]. [beta]].
+        Creates a matrix out of psi and multiply it against its inverse, resulting in a column vector in the form [[alfa]. [beta]].
+        
         Does the operation |psi><psi| from Equation #18 or #19 in the Article.
     """
     psi = np.matrix(psi)
     return psi * psi.getH()
 
-def create_and_execute_classifier(vector_x, vector_w, paramsClassifier=[1,1,1,0]):
+def create_and_execute_classifier(vector_x, vector_w, sigma_q_params=[1,1,1,0]):
     """
-        Applies the ICQ classifier using only the math behind the Quantum Classifier 
-        described in Interactive Quantum Classifier Inspired by Quantum Open System Theory
-        article. 
-        After doing so, it gets the result of Equation #20 and returns Z as the predicted class and
-        the probability of being the class 1.
-        Works only for binary classifications, therefore, if the probability of class 0 is needed, it can
-        be 1 - probability of being class 1.
-    """
+        Applies the ICQ classifier using only the math behind the Quantum Classifier described in Interactive Quantum Classifier Inspired by Quantum Open System Theory article. After doing so, it gets the result of Equation #20 and returns Z as the predicted class and the probability of being the class 1.
+        
+        Works only for binary classifications, therefore, if the probability of class 0 is needed, it can be 1 - probability of being class 1.
 
-    return create_and_execute_classifier_new_approach(vector_x, vector_w, False, False, False, [1, 1, 1, 0])
+        OBS: to have the default version of ICQ, use sigma_q_params as [1,1,1,0] as it ignores the sigmaH.
+    """
+    return create_and_execute_classifier_new_approach(vector_x, 
+                                                      vector_w, 
+                                                      False, 
+                                                      False, 
+                                                      False, 
+                                                      sigma_q_params)
 
 def normalize(x):
     v_norm = x / (np.linalg.norm(x) + 1e-16)
     return v_norm
 
-def create_and_execute_classifier_new_approach(vector_x, vector_w, normalize_x=False, normalize_w=False, split_input_weight = True, sigma_q_params=[1,1,1,0]):
+def create_and_execute_classifier_new_approach(vector_x, 
+                                               vector_w, 
+                                               normalize_x=False, 
+                                               normalize_w=False, 
+                                               split_input_weight=True, 
+                                               sigma_q_params=[1,1,1,0]):
     """
-        Applies the a modified version of ICQ classifier using only the math behind the Quantum Classifier 
-        described in Interactive Quantum Classifier Inspired by Quantum Open System Theory
-        article. 
+        Applies the a modified version of ICQ classifier using only the math behind the Quantum Classifier described in Interactive Quantum Classifier Inspired by Quantum Open System Theory article. 
         
-        It differs from the original ICQ by adding a new component to Sigma Q: sigmaH, which corresponds to a
-        Haddamard's gate. Another difference is that we load the input in the environment instead of having a combination
-        of weights and inputs in sigmaE.
+        It differs from the original ICQ by adding a new component to Sigma Q: sigmaH, which corresponds to a Haddamard's gate. Another difference is that we load the input in the environment instead of having a combination of weights and inputs in sigmaE.
 
-        After doing so, it gets the result of Equation #20 and returns Z as the predicted class and
-        the probability of being the class 1.
-        Works only for binary classifications, therefore, if the probability of class 0 is needed, it can
-        be 1 - probability of being class 1.
+        After doing so, it gets the result of Equation #20 and returns Z as the predicted class and the probability of being the class 1.
+        
+        Works only for binary classifications, therefore, if the probability of class 0 is needed, it can be 1 - probability of being class 1.
 
         To have the original ICQ Classifier, you can have:
         normalize_x = False
@@ -106,7 +109,7 @@ def create_and_execute_classifier_new_approach(vector_x, vector_w, normalize_x=F
         for i in range(N):
             sigmaE[i,i] = vector_w[i]
     else:
-        # Or keep both as the original one
+        # Or keep both as the original ICQ article
         sigmaE = get_sigmaE(vector_x, vector_w)
         
     U_operator = get_U_operator(sigmaQ, sigmaE)
@@ -114,11 +117,12 @@ def create_and_execute_classifier_new_approach(vector_x, vector_w, normalize_x=F
     # Eq #18 applied on a Quantum state equivalent of Hadamard(|0>) = 1/sqrt(2) * (|0> + |1>) 
     p_cog = get_p([[1/np.sqrt(2)],[1/np.sqrt(2)]])
 
-    # Eq #19 applied on a Quantum state equivalent of Hadamard(|000000...>) = 1/sqrt(N) * (|000000...> + ... + |11111111....>) 
-    # and having the inputs loaded on each quantum state
+    # Eq #19 applied on a Quantum state equivalent of Hadamard(|00...0>) = 1/sqrt(N) * (|00...0> + ... + |11...1>)
     if split_input_weight:
-        p_env = get_p([[vector_x_i] for vector_x_i in vector_x])
+        # We can either have Hadamard applied to each instance attribute...
+        p_env = get_p([[vector_x_i]*(1/np.sqrt(N)) for vector_x_i in vector_x])
     else:
+        # ... or have as the original ICQ: Hadamard applied to a |00...0> gate
         p_env = get_p([[1/np.sqrt(N)] for _ in range(N)])
 
     # Extracting p_cog and p_env kron

@@ -10,7 +10,14 @@ import os
 sys.path.append(os.path.abspath('../models'))
 from models.icq_scikit_estimator import IcqClassifier
 
-def executeIris(random_seed = 1, classifier_function=None, sigma_q_weights=[1,1,1,0], one_vs_classifier = OneVsRestClassifier, max_iter=3000):
+def executeIris(random_seed = 1, 
+                classifier_function=None, 
+                sigma_q_weights=[1,1,1,0], 
+                one_vs_classifier=OneVsRestClassifier, 
+                max_iter=3000):
+    """
+        Executes ICQ classifier against Iris dataset (loaded from scikit.datasets) using classifier_function as classifier (either ../helpers/icq_methods.create_and_execute_classifier or ../helpers/icq_methods.create_and_execute_classifier_new_approach.)
+    """
     # load dataset
     iris = datasets.load_iris()
     X = iris.data[:, [0,1,2, 3]]
