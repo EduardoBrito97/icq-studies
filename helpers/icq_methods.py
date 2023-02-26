@@ -1,32 +1,34 @@
 import numpy as np
 from scipy.linalg import expm as expMatrix
 
-def get_sigmaE(vectorX, vectorW):
+def get_sigmaE(vector_x, vector_w):
     """
-        Multiplies the input (vectorX) by the weights (vectorW), resulting in a diagonal matrix. 
-        It discards any imaginary part vectorX and vectorW might have.
+        Multiplies the input (vector_x) by the weights (vector_w), resulting in a diagonal matrix. 
+        It discards any imaginary part vector_x and vector_w might have.
         Equivalent of Equation #17 in the Article.
     """
-    n = len(vectorX)
+    n = len(vector_x)
     sigmaE = np.zeros((n,n))
     for i in range(n):
-        sigmaE[i,i] = np.real(vectorX[i])*np.real(vectorW[i])
+        sigmaE[i,i] = np.real(vector_x[i])*np.real(vector_w[i])
 
     return sigmaE
 
-def get_sigmaQ(n):
+def get_weighted_sigmaQ(param):
     """
-        Sums sigmaX, sigmaY and sigmaZ to get sigmaQ.
+        returns param[0]*sigmaX + param[1]*sigmaY + param[2]*sigmaZ + param[3]*sigmaH to get sigmaQ.
         - sigmaX comes from Equation #7 = [0, 1   1, 0]
         - sigmaY comes from Equation #8 = [0, -i  i, 0]
         - sigmaZ comes from Equation #9 = [1, 0   0, -1]
+        - sigmaH is equivalent to Haddamards gate
         Equivalent of Equation #16 in the Article.
     """
-    sigmaQ = np.zeros((n,n))
+    sigmaQ = np.zeros((2,2))
     sigmaX = np.array([[0,1], [1,0]])
     sigmaY = np.array([[0,-1j], [1j,0]])
     sigmaZ = np.array([[1,0], [0,-1]])
-    sigmaQ = sigmaX + sigmaY + sigmaZ
+    sigmaH = np.array([[1,1],[1,-1]])*(1/np.sqrt(2))
+    sigmaQ = param[0]*sigmaX + param[1]*sigmaY + param[2]*sigmaZ + param[3]*sigmaH
 
     return sigmaQ
 
@@ -48,7 +50,7 @@ def get_p(psi):
     psi = np.matrix(psi)
     return psi * psi.getH()
 
-def create_and_execute_classifier(vectorX, vectorW):
+def create_and_execute_classifier(vector_x, vector_w, paramsClassifier=[1,1,1,0]):
     """
         Applies the ICQ classifier using only the math behind the Quantum Classifier 
         described in Interactive Quantum Classifier Inspired by Quantum Open System Theory
@@ -59,26 +61,71 @@ def create_and_execute_classifier(vectorX, vectorW):
         be 1 - probability of being class 1.
     """
 
+    return create_and_execute_classifier_new_approach(vector_x, vector_w, False, False, False, [1, 1, 1, 0])
+
+def normalize(x):
+    v_norm = x / (np.linalg.norm(x) + 1e-16)
+    return v_norm
+
+def create_and_execute_classifier_new_approach(vector_x, vector_w, normalize_x=False, normalize_w=False, split_input_weight = True, sigma_q_params=[1,1,1,0]):
+    """
+        Applies the a modified version of ICQ classifier using only the math behind the Quantum Classifier 
+        described in Interactive Quantum Classifier Inspired by Quantum Open System Theory
+        article. 
+        
+        It differs from the original ICQ by adding a new component to Sigma Q: sigmaH, which corresponds to a
+        Haddamard's gate. Another difference is that we load the input in the environment instead of having a combination
+        of weights and inputs in sigmaE.
+
+        After doing so, it gets the result of Equation #20 and returns Z as the predicted class and
+        the probability of being the class 1.
+        Works only for binary classifications, therefore, if the probability of class 0 is needed, it can
+        be 1 - probability of being class 1.
+
+        To have the original ICQ Classifier, you can have:
+        normalize_x = False
+        normalize_w = False
+        split_input_weight = False
+        sigma_q_params = [1, 1, 1, 0]
+    """
+
+    if normalize_x:
+        vector_x = normalize(vector_x)
+    if normalize_w:
+        vector_w = normalize(vector_w)  
     # Eq #16
-    sigmaQ = get_sigmaQ(2)
+    sigmaQ = get_weighted_sigmaQ(sigma_q_params)
 
     # Eq #17
-    sigmaE = get_sigmaE(vectorX, vectorW)
+    N = len(vector_x)
 
-    # Eq #15
+    # Equivalent to Eq #15
+    if split_input_weight:
+        # We can either keep only weights
+        sigmaE = np.zeros((N,N), dtype= np.complex128)
+        for i in range(N):
+            sigmaE[i,i] = vector_w[i]
+    else:
+        # Or keep both as the original one
+        sigmaE = get_sigmaE(vector_x, vector_w)
+        
     U_operator = get_U_operator(sigmaQ, sigmaE)
 
     # Eq #18 applied on a Quantum state equivalent of Hadamard(|0>) = 1/sqrt(2) * (|0> + |1>) 
     p_cog = get_p([[1/np.sqrt(2)],[1/np.sqrt(2)]])
 
-    # As we must have 1 row per attribute of the input, we need env to be as big as one instance of our input
-    N = len(vectorX)
-
     # Eq #19 applied on a Quantum state equivalent of Hadamard(|000000...>) = 1/sqrt(N) * (|000000...> + ... + |11111111....>) 
-    p_env = get_p([[1/np.sqrt(N)] for i in range(N)])
+    # and having the inputs loaded on each quantum state
+    if split_input_weight:
+        p_env = get_p([[vector_x_i] for vector_x_i in vector_x])
+    else:
+        p_env = get_p([[1/np.sqrt(N)] for _ in range(N)])
+
+    # Extracting p_cog and p_env kron
+    p_cog_env = np.kron(p_cog, p_env)
 
     # First part of Equation #20 in the Article
-    quantum_operation = np.array(U_operator * (np.kron(p_cog, p_env)) * U_operator.getH())
+    quantum_operation = np.array(U_operator * p_cog_env * U_operator.getH())
 
     # Second part of Equation #20 in the Article
     p_cog_new = np.trace(quantum_operation.reshape([2,N,2,N]), axis1=1, axis2=3)
@@ -92,7 +139,7 @@ def create_and_execute_classifier(vectorX, vectorW):
         z = 0
     else:
         z = 1
-    return z, p_cog_new_11_2
+    return z, p_cog_new_11_2, U_operator
 
 def update_weights(weights, y, z, x, p, n):
   """

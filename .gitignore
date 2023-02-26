@@ -18,3 +18,4 @@ DishonestDataset/RO_20%.txt
 DishonestDataset/RO_30%.txt
 DishonestDataset/RO_40%.txt
 DishonestDataset/RO_50%.txt
+models/__pycache__/*
