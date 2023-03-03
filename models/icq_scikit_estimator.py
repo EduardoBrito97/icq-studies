@@ -103,7 +103,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
             # Training step
             for x_train, y_train in zip(X, y):
                 # Execute the classifier with the weights we have now...
-                z, p_cog, _ = self.classifier_function(x_train, weight, self.sigma_q_weights)
+                z, p_cog, _ = self.classifier_function(x_train, weight, sigma_q_params = self.sigma_q_weights)
 
                 # Update weights based on the result
                 weight = update_weights(weight, y_train, z, x_train, p_cog, n=self.learning_accuracy)

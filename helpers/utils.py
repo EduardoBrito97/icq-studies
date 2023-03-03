@@ -50,7 +50,8 @@ def executeIris(random_seed = 1,
                 max_iter=max_iter,
                 accuracy_succ=1.0,
                 plot_graphs_and_metrics=plot_graphs_in_classifier,
-                random_seed=random_seed)).fit(normalized_X_train, y_train)
+                random_seed=random_seed),
+                n_jobs=-1).fit(normalized_X_train, y_train)
 
         score = clf.score(normalized_X_test, y_test)
         f1score = f1_score(clf.predict(normalized_X_test), y_test, average='macro')
