@@ -19,7 +19,8 @@ def executeIris(random_seed = 1,
                 max_iter=3000,
                 plot_graphs_in_classifier=False,
                 print_each_fold_metric=True,
-                print_avg_metric=True):
+                print_avg_metric=True,
+                learning_rate=0.01):
     """
         Executes ICQ classifier against Iris dataset (loaded from scikit.datasets) using classifier_function as classifier (either ../helpers/icq_methods.create_and_execute_classifier or ../helpers/icq_methods.create_and_execute_classifier_new_approach.)
     """
@@ -50,7 +51,8 @@ def executeIris(random_seed = 1,
                 max_iter=max_iter,
                 accuracy_succ=1.0,
                 plot_graphs_and_metrics=plot_graphs_in_classifier,
-                random_seed=random_seed),
+                random_seed=random_seed,
+                learning_rate=learning_rate),
                 n_jobs=-1).fit(normalized_X_train, y_train)
 
         score = clf.score(normalized_X_test, y_test)
@@ -74,7 +76,8 @@ def executeIrisOneVsRest(random_seed=1,
                         sigma_q_weights=[1,1,1,0], 
                         max_iter=3000,
                         print_each_fold_metric=True,
-                        print_avg_metric=True):
+                        print_avg_metric=True,
+                        learning_rate=0.01):
     """
         Uses executeIris with sklearn.multiclass.OneVsRestClassifier
     """
@@ -85,14 +88,16 @@ def executeIrisOneVsRest(random_seed=1,
                        max_iter,
                        print_each_fold_metric=print_each_fold_metric,
                        plot_graphs_in_classifier=False,
-                       print_avg_metric=print_avg_metric)
+                       print_avg_metric=print_avg_metric,
+                       learning_rate=learning_rate)
 
 def executeIrisOneVsOne(random_seed=1, 
                         classifier_function=None, 
                         sigma_q_weights=[1,1,1,0], 
                         max_iter=3000,
                         print_each_fold_metric=True,
-                        print_avg_metric=True):
+                        print_avg_metric=True,
+                        learning_rate=0.01):
     """
         Uses executeIris with sklearn.multiclass.OneVsOneClassifier
     """
@@ -103,10 +108,13 @@ def executeIrisOneVsOne(random_seed=1,
                        max_iter,
                        print_each_fold_metric=print_each_fold_metric,
                        plot_graphs_in_classifier=False,
-                       print_avg_metric=print_avg_metric)
+                       print_avg_metric=print_avg_metric,
+                       learning_rate=learning_rate)
 
 def print_metrics(scores, f1scores):
     print("Scores:", scores)
     print("Best score:", np.max(scores))
     print("F1-Scores:", f1scores)
     print("Max F1-Score:", np.max(f1scores))
+    print("Avg score:", np.mean(scores))
+    print("Avg F1-Score:", np.mean(f1scores))
