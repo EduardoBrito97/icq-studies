@@ -29,7 +29,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
 
             reset_weights_epoch (int): max amount of epochs that a random weight should be trained. If reached, it will reset the weights to random numbers again and will keep training. If set to 0, it will never be reset.
 
-            learning_accuracy (float): weights' learning accuracy.
+            learning_rate (float): weights' learning accuracy.
 
             plot_graphs_and_metrics (boolean): prints training best weights, accuracy and epoch x accuracy graph.
 
@@ -50,7 +50,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
                  max_iter=1000, 
                  reset_weights_epoch=0,
                  random_seed=1,
-                 learning_accuracy=0.01,
+                 learning_rate=0.01,
                  plot_graphs_and_metrics = True):
         self.accuracy_succ = accuracy_succ
         self.classifier_function = classifier_function
@@ -58,7 +58,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
         self.sigma_q_weights = sigma_q_weights
         self.reset_weights_epoch = reset_weights_epoch
         self.random_seed = random_seed
-        self.learning_accuracy = learning_accuracy
+        self.learning_rate = learning_rate
         self.plot_graphs_and_metrics = plot_graphs_and_metrics
 
     def fit(self, X, y):
@@ -106,7 +106,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
                 z, p_cog, _ = self.classifier_function(x_train, weight, sigma_q_params = self.sigma_q_weights)
 
                 # Update weights based on the result
-                weight = update_weights(weight, y_train, z, x_train, p_cog, n=self.learning_accuracy)
+                weight = update_weights(weight, y_train, z, x_train, p_cog, n=self.learning_rate)
                 
             # After executing everything and updating the weights for the whole set example, we compute current accuracy
             for x_train, y_train in zip(X, y):
