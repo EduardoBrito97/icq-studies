@@ -1,21 +1,5 @@
 helpers/__pycache__/*
 __pycache__/*
-DishonestDataset/BM_10%.txt
-DishonestDataset/BM_20%.txt
-DishonestDataset/BM_30%.txt
-DishonestDataset/BM_40%.txt
-DishonestDataset/BM_50%.txt
-DishonestDataset/BS_10%.txt
-DishonestDataset/BS_20%.txt
-DishonestDataset/BS_30%.txt
-DishonestDataset/BS_40%.txt
-DishonestDataset/BS_50%.txt
-DishonestDataset/DataSetDescription.txt
-DishonestDataset/Dishonest Internet users dataset.txt
-DishonestDataset/Dishonest_Internet_Users.zip
-DishonestDataset/RO_10%.txt
-DishonestDataset/RO_20%.txt
-DishonestDataset/RO_30%.txt
-DishonestDataset/RO_40%.txt
-DishonestDataset/RO_50%.txt
+DishonestDataset/*
+dataset_evaluation/dishonest_dataset/DishonestDataset/*
 models/__pycache__/*
