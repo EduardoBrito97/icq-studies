@@ -80,9 +80,9 @@ def executeWineOneVsRest(random_seed=1,
                         max_iter=3000,
                         print_each_fold_metric=True,
                         print_avg_metric=True,
-                        learning_rate=0.01):
+                        learning_rate=0.011):
     """
-        Uses execute_model with sklearn.multiclass.OneVsRestClassifier
+        Uses execute_model with sklearn.multiclass.OneVsRestClassifier against Wine dataset (see https://archive.ics.uci.edu/ml/datasets/Wine)
     """
     return execute_model(random_seed,
                        classifier_function,
@@ -101,9 +101,9 @@ def executeIrisOneVsRest(random_seed=1,
                         max_iter=3000,
                         print_each_fold_metric=True,
                         print_avg_metric=True,
-                        learning_rate=0.01):
+                        learning_rate=0.009):
     """
-        Uses execute_model with sklearn.multiclass.OneVsRestClassifier
+        Uses execute_model with sklearn.multiclass.OneVsRestClassifier agaisnt Iris dataset (see https://archive.ics.uci.edu/ml/datasets/iris)
     """
     return execute_model(random_seed,
                        classifier_function,
@@ -122,7 +122,7 @@ def executeIrisOneVsOne(random_seed=1,
                         max_iter=3000,
                         print_each_fold_metric=True,
                         print_avg_metric=True,
-                        learning_rate=0.01):
+                        learning_rate=0.009):
     """
         Uses execute_model with sklearn.multiclass.OneVsOneClassifier
     """
