@@ -76,7 +76,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
         np.random.seed(self.random_seed)
         
         # Replicates classes to have same number of 0s and 1s examples
-        X,y = replicate_classes(X, y)
+        X,y = replicate_classes(X, y, self.random_seed)
             
         # Check that X and y have correct shape (i.e. same amount of examples)
         X, y = check_X_y(X, y)

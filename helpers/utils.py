@@ -1,18 +1,19 @@
 import numpy as np
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
-from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import normalize
 from sklearn.metrics import f1_score, classification_report
-from sklearn import datasets
+from database_helpers import get_iris, get_wine, get_stratified_kfold
 
 import sys
 import os
 sys.path.append(os.path.abspath('../models'))
+sys.path.append(os.path.abspath('../helpers'))
+from database_helpers import get_iris, get_wine, get_stratified_kfold
 from models.icq_scikit_estimator import IcqClassifier
 
 K_FOLDS=10
 
-def executeIris(random_seed = 1, 
+def execute_model(random_seed = 1, 
                 classifier_function=None, 
                 sigma_q_weights=[1,1,1,0], 
                 one_vs_classifier=OneVsRestClassifier, 
@@ -20,20 +21,22 @@ def executeIris(random_seed = 1,
                 plot_graphs_in_classifier=False,
                 print_each_fold_metric=True,
                 print_avg_metric=True,
-                learning_rate=0.01):
+                learning_rate=0.01,
+                dataset_load_method = get_iris):
     """
-        Executes ICQ classifier against Iris dataset (loaded from scikit.datasets) using classifier_function as classifier (either ../helpers/icq_methods.create_and_execute_classifier or ../helpers/icq_methods.create_and_execute_classifier_new_approach.)
+        Executes ICQ classifier against an dataset using classifier_function as classifier (either ../helpers/icq_methods.create_and_execute_classifier or ../helpers/icq_methods.create_and_execute_classifier_new_approach).
+        As for datasets, we need it to return a pair X, y. See database_helpers for examples
     """
-    # load dataset
-    iris = datasets.load_iris()
-    X = iris.data[:, [0,1,2, 3]]
-    y = iris.target
+    # Loading dataset
+    X, y = dataset_load_method()
 
-    # split training set and test set
-    skf = StratifiedKFold(n_splits=K_FOLDS, random_state=random_seed, shuffle=True)
+    # Creating K-Fold to use
+    skf = get_stratified_kfold(random_seed=random_seed)
 
     scores = []
     f1scores = []
+
+    # Training the classifier itself
     for i, (train_index, test_index) in enumerate(skf.split(X, y)):
         X_train = X[train_index]
         X_test = X[test_index]
@@ -71,6 +74,27 @@ def executeIris(random_seed = 1,
         print("AVG: Scores =", np.mean(scores), "F1-Scores =", np.mean(f1scores))
     return scores, f1scores
 
+def executeWineOneVsRest(random_seed=1, 
+                        classifier_function=None, 
+                        sigma_q_weights=[1,1,1,0], 
+                        max_iter=3000,
+                        print_each_fold_metric=True,
+                        print_avg_metric=True,
+                        learning_rate=0.01):
+    """
+        Uses execute_model with sklearn.multiclass.OneVsRestClassifier
+    """
+    return execute_model(random_seed,
+                       classifier_function,
+                       sigma_q_weights,
+                       OneVsRestClassifier,
+                       max_iter,
+                       print_each_fold_metric=print_each_fold_metric,
+                       plot_graphs_in_classifier=False,
+                       print_avg_metric=print_avg_metric,
+                       learning_rate=learning_rate,
+                       dataset_load_method=get_wine)
+
 def executeIrisOneVsRest(random_seed=1, 
                         classifier_function=None, 
                         sigma_q_weights=[1,1,1,0], 
@@ -79,9 +103,9 @@ def executeIrisOneVsRest(random_seed=1,
                         print_avg_metric=True,
                         learning_rate=0.01):
     """
-        Uses executeIris with sklearn.multiclass.OneVsRestClassifier
+        Uses execute_model with sklearn.multiclass.OneVsRestClassifier
     """
-    return executeIris(random_seed,
+    return execute_model(random_seed,
                        classifier_function,
                        sigma_q_weights,
                        OneVsRestClassifier,
@@ -89,7 +113,8 @@ def executeIrisOneVsRest(random_seed=1,
                        print_each_fold_metric=print_each_fold_metric,
                        plot_graphs_in_classifier=False,
                        print_avg_metric=print_avg_metric,
-                       learning_rate=learning_rate)
+                       learning_rate=learning_rate,
+                       dataset_load_method=get_iris)
 
 def executeIrisOneVsOne(random_seed=1, 
                         classifier_function=None, 
@@ -99,9 +124,9 @@ def executeIrisOneVsOne(random_seed=1,
                         print_avg_metric=True,
                         learning_rate=0.01):
     """
-        Uses executeIris with sklearn.multiclass.OneVsOneClassifier
+        Uses execute_model with sklearn.multiclass.OneVsOneClassifier
     """
-    return executeIris(random_seed,
+    return execute_model(random_seed,
                        classifier_function,
                        sigma_q_weights,
                        OneVsOneClassifier,
@@ -109,7 +134,8 @@ def executeIrisOneVsOne(random_seed=1,
                        print_each_fold_metric=print_each_fold_metric,
                        plot_graphs_in_classifier=False,
                        print_avg_metric=print_avg_metric,
-                       learning_rate=learning_rate)
+                       learning_rate=learning_rate,
+                       dataset_load_method=get_iris)
 
 def print_metrics(scores, f1scores):
     print("Scores:", scores)

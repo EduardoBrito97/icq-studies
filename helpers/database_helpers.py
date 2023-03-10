@@ -44,5 +44,11 @@ def get_iris():
     y = iris.target
     return X, y
 
+def get_wine():
+    wine = datasets.load_wine()
+    X = wine.data
+    y = wine.target
+    return X, y
+
 def get_stratified_kfold(k_folds=10, random_seed=42):
     return StratifiedKFold(n_splits=k_folds, random_state=random_seed, shuffle=True)
