@@ -19,7 +19,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
         It estimates only binary classifications. For multi-class problems, you can use e.g. sklearn.multiclass.OneVsOneClassifier or sklearn.multiclass.OneVsRestClassifier.
 
         Attributes:
-            classifier_function (fun): either ../helpers/icq_methods.create_and_execute_classifier or ../helpers/icq_methods.create_and_execute_classifier_new_approach.
+            classifier_function (fun): check /helpers/icq_executions.py file to see available functions
 
             accuracy_succ (float): accuracy considered as successful training.
 

@@ -16,21 +16,59 @@ def get_sigmaE(vector_x, vector_w):
 
 def get_weighted_sigmaQ(param):
     """
-        returns param[0]*sigmaX + param[1]*sigmaY + param[2]*sigmaZ + param[3]*sigmaH to get sigmaQ.
+        returns param[0]*sigmaX + param[1]*sigmaY + param[2]*sigmaZ to get sigmaQ.
         - sigmaX comes from Equation #7 = [0, 1   1, 0]
         - sigmaY comes from Equation #8 = [0, -i  i, 0]
         - sigmaZ comes from Equation #9 = [1, 0   0, -1]
-        - sigmaH is equivalent to Haddamards gate
         Equivalent of Equation #16 in the Article.
     """
     sigmaQ = np.zeros((2,2))
     sigmaX = np.array([[0,1], [1,0]])
     sigmaY = np.array([[0,-1j], [1j,0]])
     sigmaZ = np.array([[1,0], [0,-1]])
-    sigmaH = np.array([[1,1],[1,-1]])*(1/np.sqrt(2))
-    sigmaQ = param[0]*sigmaX + param[1]*sigmaY + param[2]*sigmaZ + param[3]*sigmaH
+    sigmaQ = param[0]*sigmaX + param[1]*sigmaY + param[2]*sigmaZ
 
     return sigmaQ
+
+def get_sigmaQ_from_polar_coord(param):
+    """
+        param should be an array that pulls:
+        - r = param[0]
+        - theta = param[1]
+        - phi = param[2]
+
+        returns (identity + (rx * sigmaX) + (ry * sigmaY) + (rz * sigmaZ))/2 to get sigmaQ.
+        - sigmaX comes from Equation #7 = [0, 1   1, 0]
+        - sigmaY comes from Equation #8 = [0, -i  i, 0]
+        - sigmaZ comes from Equation #9 = [1, 0   0, -1]
+
+        where:
+        - rx = r * sin(theta) * cos(phi)
+        - ry = r * sin(theta) * sin(phi)
+        - rz = r * cos(theta)
+        
+        It's an improved version of Equation #16 from the article, since we need it to sum up to 1.
+    """
+    # First we retrieve the params
+    r = param[0]
+    theta = param[1]
+    phi = param[2]
+
+    # Then we find out what are our rx, ry and rz
+    rx = r * np.sin(theta) * np.cos(phi)
+    ry = r * np.sin(theta) * np.sin(phi)
+    rz = r * np.cos(theta)
+
+    # Latest part is define sigmaX, sigmaY and sigmaZ from Equations #7, #8 and #9 respectively
+    sigmaX = np.array([[0,1], [1,0]])
+    sigmaY = np.array([[0,-1j], [1j,0]])
+    sigmaZ = np.array([[1,0], [0,-1]])
+
+    # Plus the identity which is needed
+    identity = np.array([[1, 0], [0, 1]])
+
+    # Now we return the calculation
+    return (identity + (rx * sigmaX) + (ry * sigmaY) + (rz * sigmaZ))/2
 
 def get_U_operator(sigmaQ, sigmaE):
     """
@@ -51,31 +89,17 @@ def get_p(psi):
     psi = np.matrix(psi)
     return psi * psi.getH()
 
-def create_and_execute_classifier(vector_x, vector_w, sigma_q_params=[1,1,1,0]):
-    """
-        Applies the ICQ classifier using only the math behind the Quantum Classifier described in Interactive Quantum Classifier Inspired by Quantum Open System Theory article. After doing so, it gets the result of Equation #20 and returns Z as the predicted class and the probability of being the class 1.
-        
-        Works only for binary classifications, therefore, if the probability of class 0 is needed, it can be 1 - probability of being class 1.
-
-        OBS: to have the default version of ICQ, use sigma_q_params as [1,1,1,0] as it ignores the sigmaH.
-    """
-    return create_and_execute_classifier_new_approach(vector_x, 
-                                                      vector_w, 
-                                                      False, 
-                                                      False, 
-                                                      False, 
-                                                      sigma_q_params)
-
 def normalize(x):
     v_norm = x / (np.linalg.norm(x) + 1e-16)
     return v_norm
 
-def create_and_execute_classifier_new_approach(vector_x, 
-                                               vector_w, 
-                                               normalize_x=False, 
-                                               normalize_w=False, 
-                                               split_input_weight=True, 
-                                               sigma_q_params=[1,1,1,0]):
+def create_and_execute(vector_x, 
+                        vector_w, 
+                        normalize_x=False, 
+                        normalize_w=False, 
+                        split_input_weight=True, 
+                        sigma_q_params=[1,1,1],
+                        use_polar_coordinates_on_sigma_q = False):
     """
         Applies the a modified version of ICQ classifier using only the math behind the Quantum Classifier described in Interactive Quantum Classifier Inspired by Quantum Open System Theory article. 
         
@@ -89,15 +113,20 @@ def create_and_execute_classifier_new_approach(vector_x,
         normalize_x = False
         normalize_w = False
         split_input_weight = False
-        sigma_q_params = [1, 1, 1, 0]
+        sigma_q_params = [1, 1, 1]
     """
 
     if normalize_x:
         vector_x = normalize(vector_x)
     if normalize_w:
         vector_w = normalize(vector_w)  
-    # Eq #16
-    sigmaQ = get_weighted_sigmaQ(sigma_q_params)
+
+    if (use_polar_coordinates_on_sigma_q):
+        # Eq #16, but using polar coordinates so |sigmaQ| gets to be 1
+        sigmaQ = get_sigmaQ_from_polar_coord(sigma_q_params)
+    else:
+        # Eq #16
+        sigmaQ = get_weighted_sigmaQ(sigma_q_params)
 
     # Eq #17
     N = len(vector_x)

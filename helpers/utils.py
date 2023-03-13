@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import normalize
 from sklearn.metrics import f1_score, classification_report
 from database_helpers import get_iris, get_wine, get_stratified_kfold
@@ -15,7 +15,7 @@ K_FOLDS=10
 
 def execute_model(random_seed = 1, 
                 classifier_function=None, 
-                sigma_q_weights=[1,1,1,0], 
+                sigma_q_weights=[1, 1, 1], 
                 one_vs_classifier=OneVsRestClassifier, 
                 max_iter=3000,
                 plot_graphs_in_classifier=False,
@@ -76,7 +76,7 @@ def execute_model(random_seed = 1,
 
 def executeWineOneVsRest(random_seed=1, 
                         classifier_function=None, 
-                        sigma_q_weights=[1,1,1,0], 
+                        sigma_q_weights=[1, 1, 1], 
                         max_iter=3000,
                         print_each_fold_metric=True,
                         print_avg_metric=True,
@@ -97,7 +97,7 @@ def executeWineOneVsRest(random_seed=1,
 
 def executeIrisOneVsRest(random_seed=1, 
                         classifier_function=None, 
-                        sigma_q_weights=[1,1,1,0], 
+                        sigma_q_weights=[1, 1, 1], 
                         max_iter=3000,
                         print_each_fold_metric=True,
                         print_avg_metric=True,
@@ -115,32 +115,3 @@ def executeIrisOneVsRest(random_seed=1,
                        print_avg_metric=print_avg_metric,
                        learning_rate=learning_rate,
                        dataset_load_method=get_iris)
-
-def executeIrisOneVsOne(random_seed=1, 
-                        classifier_function=None, 
-                        sigma_q_weights=[1,1,1,0], 
-                        max_iter=3000,
-                        print_each_fold_metric=True,
-                        print_avg_metric=True,
-                        learning_rate=0.009):
-    """
-        Uses execute_model with sklearn.multiclass.OneVsOneClassifier
-    """
-    return execute_model(random_seed,
-                       classifier_function,
-                       sigma_q_weights,
-                       OneVsOneClassifier,
-                       max_iter,
-                       print_each_fold_metric=print_each_fold_metric,
-                       plot_graphs_in_classifier=False,
-                       print_avg_metric=print_avg_metric,
-                       learning_rate=learning_rate,
-                       dataset_load_method=get_iris)
-
-def print_metrics(scores, f1scores):
-    print("Scores:", scores)
-    print("Best score:", np.max(scores))
-    print("F1-Scores:", f1scores)
-    print("Max F1-Score:", np.max(f1scores))
-    print("Avg score:", np.mean(scores))
-    print("Avg F1-Score:", np.mean(f1scores))
