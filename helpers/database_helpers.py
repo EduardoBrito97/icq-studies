@@ -7,6 +7,13 @@ from sklearn import datasets
 from imblearn.over_sampling import RandomOverSampler
 
 def replicate_classes(X, y, random_seed=42):
+    """
+        Assumes that y is either 0 or 1, and tries to balance these two classes.
+        
+        If the amount of the majority class is a multiple of the minority, we completely replicate the minority until we reach the majority.
+
+        In case it's not, we use imblear.over_sampling.RandomOverSampler with random_seed as seed to oversample and get the same amount of minority and majority class. See https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.RandomOverSampler.html
+    """
     ones_indices = y == 1
     ones = len(y[ones_indices])
 
