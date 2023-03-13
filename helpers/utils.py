@@ -24,7 +24,7 @@ def execute_model(random_seed = 1,
                 learning_rate=0.01,
                 dataset_load_method=get_iris):
     """
-        Executes ICQ classifier against an dataset using classifier_function as classifier (either ../helpers/icq_methods.create_and_execute_classifier or ../helpers/icq_methods.create_and_execute_classifier_new_approach).
+        Executes ICQ classifier against an dataset using classifier_function as classifier (see /helpers/icq_executions.py for more info).
         As for datasets, we need it to return a pair X, y. See database_helpers for examples
     """
     # Loading dataset
