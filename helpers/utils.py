@@ -103,7 +103,7 @@ def executeIrisOneVsRest(random_seed=1,
                         print_avg_metric=True,
                         learning_rate=0.009):
     """
-        Uses execute_model with sklearn.multiclass.OneVsRestClassifier agaisnt Iris dataset (see https://archive.ics.uci.edu/ml/datasets/iris)
+        Uses execute_model with sklearn.multiclass.OneVsRestClassifier against Iris dataset (see https://archive.ics.uci.edu/ml/datasets/iris)
     """
     return execute_model(random_seed,
                        classifier_function,
@@ -115,3 +115,11 @@ def executeIrisOneVsRest(random_seed=1,
                        print_avg_metric=print_avg_metric,
                        learning_rate=learning_rate,
                        dataset_load_method=get_iris)
+
+def print_metrics(scores, f1scores):
+    print("Scores:", scores)
+    print("Best score:", np.max(scores))
+    print("F1-Scores:", f1scores)
+    print("Max F1-Score:", np.max(f1scores))
+    print("Avg score:", np.mean(scores))
+    print("Avg F1-Score:", np.mean(f1scores))
