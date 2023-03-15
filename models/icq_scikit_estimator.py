@@ -51,7 +51,8 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
                  reset_weights_epoch=0,
                  random_seed=1,
                  learning_rate=0.01,
-                 plot_graphs_and_metrics = True):
+                 plot_graphs_and_metrics=True,
+                 do_classes_refit=True):
         self.accuracy_succ = accuracy_succ
         self.classifier_function = classifier_function
         self.max_iter = max_iter
@@ -60,6 +61,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
         self.random_seed = random_seed
         self.learning_rate = learning_rate
         self.plot_graphs_and_metrics = plot_graphs_and_metrics
+        self.do_classes_refit=do_classes_refit
 
     def fit(self, X, y):
         """
@@ -76,7 +78,8 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
         np.random.seed(self.random_seed)
         
         # Replicates classes to have same number of 0s and 1s examples
-        X,y = replicate_classes(X, y, self.random_seed)
+        if (self.do_classes_refit):
+            X,y = replicate_classes(X, y, self.random_seed)
             
         # Check that X and y have correct shape (i.e. same amount of examples)
         X, y = check_X_y(X, y)
