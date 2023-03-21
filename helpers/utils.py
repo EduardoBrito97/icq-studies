@@ -49,7 +49,7 @@ def execute_model(random_seed = 1,
 
         if (one_vs_classifier is None):
             clf = IcqClassifier(
-                classifier_function=classifier_function, 
+                classifier_function=classifier_function,
                 sigma_q_weights=sigma_q_weights,
                 max_iter=max_iter,
                 accuracy_succ=1.0,
