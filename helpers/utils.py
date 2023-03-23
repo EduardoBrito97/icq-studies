@@ -22,7 +22,9 @@ def execute_model(random_seed = 1,
                 print_each_fold_metric=True,
                 print_avg_metric=True,
                 learning_rate=0.01,
-                dataset_load_method=get_iris):
+                accuracy_succ=1.00,
+                dataset_load_method=get_iris,
+                refit_db=True):
     """
         Executes ICQ classifier against an dataset using classifier_function as classifier (see /helpers/icq_executions.py for more info).
         As for datasets, we need it to return a pair X, y. See database_helpers for examples
@@ -52,20 +54,22 @@ def execute_model(random_seed = 1,
                 classifier_function=classifier_function,
                 sigma_q_weights=sigma_q_weights,
                 max_iter=max_iter,
-                accuracy_succ=1.0,
+                accuracy_succ=accuracy_succ,
                 plot_graphs_and_metrics=plot_graphs_in_classifier,
                 random_seed=random_seed,
-                learning_rate=learning_rate).fit(normalized_X_train, y_train)
+                learning_rate=learning_rate,
+                do_classes_refit=refit_db).fit(normalized_X_train, y_train)
         else:
             clf = one_vs_classifier(
                 IcqClassifier(
                     classifier_function=classifier_function, 
                     sigma_q_weights=sigma_q_weights,
                     max_iter=max_iter,
-                    accuracy_succ=1.0,
+                    accuracy_succ=accuracy_succ,
                     plot_graphs_and_metrics=plot_graphs_in_classifier,
                     random_seed=random_seed,
-                    learning_rate=learning_rate),
+                    learning_rate=learning_rate,
+                    do_classes_refit=refit_db),
                     n_jobs=-1).fit(normalized_X_train, y_train)
 
         score = clf.score(normalized_X_test, y_test)
