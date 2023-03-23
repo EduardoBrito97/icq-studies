@@ -7,12 +7,7 @@ def get_sigmaE(vector_x, vector_w):
         It discards any imaginary part vector_x and vector_w might have.
         Equivalent of Equation #17 in the Article.
     """
-    n = len(vector_x)
-    sigmaE = np.zeros((n,n))
-    for i in range(n):
-        sigmaE[i,i] = np.real(vector_x[i])*np.real(vector_w[i])
-
-    return sigmaE
+    return np.diag(vector_x) * np.diag(vector_w)
 
 def get_weighted_sigmaQ(param):
     """
@@ -22,13 +17,10 @@ def get_weighted_sigmaQ(param):
         - sigmaZ comes from Equation #9 = [1, 0   0, -1]
         Equivalent of Equation #16 in the Article.
     """
-    sigmaQ = np.zeros((2,2))
     sigmaX = np.array([[0,1], [1,0]])
     sigmaY = np.array([[0,-1j], [1j,0]])
     sigmaZ = np.array([[1,0], [0,-1]])
-    sigmaQ = param[0]*sigmaX + param[1]*sigmaY + param[2]*sigmaZ
-
-    return sigmaQ
+    return (param[0]*sigmaX) + (param[1]*sigmaY) + (param[2]*sigmaZ)
 
 def get_sigmaQ_from_polar_coord(param):
     """
@@ -76,8 +68,6 @@ def get_U_operator(sigmaQ, sigmaE):
         
         Equivalent of Equation #15 in the Article.
     """
-    sigmaQ[np.isnan(sigmaQ)] = 0
-    sigmaE[np.isnan(sigmaE)] = 0
     return np.matrix(expMatrix(1j*np.kron(sigmaQ, sigmaE)))
 
 def get_p(psi):
@@ -90,8 +80,7 @@ def get_p(psi):
     return psi * psi.getH()
 
 def normalize(x):
-    v_norm = x / (np.linalg.norm(x) + 1e-16)
-    return v_norm
+    return x / (np.linalg.norm(x) + 1e-16)
 
 def create_and_execute(vector_x, 
                         vector_w, 
@@ -134,26 +123,27 @@ def create_and_execute(vector_x,
     # Equivalent to Eq #15
     if split_input_weight:
         # We can either keep only weights
-        sigmaE = np.zeros((N,N), dtype= np.complex128)
-        for i in range(N):
-            sigmaE[i,i] = vector_w[i]
+        sigmaE = np.diag(vector_w)
     else:
         # Or keep both as the original ICQ article
         sigmaE = get_sigmaE(vector_x, vector_w)
         
     U_operator = get_U_operator(sigmaQ, sigmaE)
 
-    # Eq #18 applied on a Quantum state equivalent of Hadamard(|0>) = 1/sqrt(2) * (|0> + |1>) 
-    p_cog = get_p([[1/np.sqrt(2)],[1/np.sqrt(2)]])
+    # Eq #18 applied on a Quantum state equivalent of Hadamard(|0>) = 1/sqrt(2) * (|0> + |1>)
+    p_cog = np.ones((2,1)) / np.sqrt(2) 
+    p_cog = get_p(p_cog)
 
     # Eq #19 applied on a Quantum state equivalent of Hadamard(|00...0>) = 1/sqrt(N) * (|00...0> + ... + |11...1>)
     if split_input_weight:
         # We can either have Hadamard applied to each instance attribute...
         vector_x_norm = (np.linalg.norm(vector_x) + 1e-16)
-        p_env = get_p([[vector_x_i*(1/vector_x_norm)] for vector_x_i in vector_x])
+        p_env = np.array(vector_x).reshape((N, 1)) / vector_x_norm
+        p_env = get_p(p_env)
     else:
         # ... or have as the original ICQ: Hadamard applied to a |00...0> gate
-        p_env = get_p([[1/np.sqrt(N)] for _ in range(N)])
+        p_env = np.ones((N,1))/np.sqrt(N)
+        p_env = get_p(p_env)
 
     # Extracting p_cog and p_env kron
     p_cog_env = np.kron(p_cog, p_env)
