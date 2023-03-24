@@ -2,7 +2,6 @@ import numpy as np
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import normalize
 from sklearn.metrics import f1_score, classification_report
-from database_helpers import get_iris, get_wine, get_stratified_kfold
 
 import sys
 import os

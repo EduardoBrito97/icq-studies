@@ -88,7 +88,7 @@ def create_and_execute(vector_x,
                         normalize_w=False, 
                         split_input_weight=True, 
                         sigma_q_params=[1,1,1],
-                        use_polar_coordinates_on_sigma_q = False):
+                        use_polar_coordinates_on_sigma_q=False):
     """
         Applies the a modified version of ICQ classifier using only the math behind the Quantum Classifier described in Interactive Quantum Classifier Inspired by Quantum Open System Theory article. 
         

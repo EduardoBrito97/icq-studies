@@ -74,9 +74,6 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
 
             Returns the trained classifier.
         """
-        # Setting random seed to have always same result
-        np.random.seed(self.random_seed)
-        
         # Replicates classes to have same number of 0s and 1s examples
         if (self.do_classes_refit):
             X,y = replicate_classes(X, y, self.random_seed)
@@ -88,9 +85,12 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
         self.classes_ = unique_labels(y)
         
         # Creates weights based on a [-1, 1] uniform distribution
-        low  = -1
+        low = -1
         high = 1
         dimensions = len(X[0])
+        
+        # Setting random seed to have always same result
+        np.random.seed(self.random_seed)
         weight = np.random.uniform(low=low, high=high, size=(dimensions,))
         
         ITERATION = 0
@@ -106,7 +106,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
             # Training step
             for x_train, y_train in zip(X, y):
                 # Execute the classifier with the weights we have now...
-                z, p_cog, _ = self.classifier_function(x_train, weight, sigma_q_params = self.sigma_q_weights)
+                z, p_cog, _ = self.classifier_function(vector_x=x_train, vector_w=weight, sigma_q_params=self.sigma_q_weights)
 
                 # Update weights based on the result
                 weight = update_weights(weight, y_train, z, x_train, p_cog, n=self.learning_rate)
@@ -114,14 +114,14 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
             # After executing everything and updating the weights for the whole set example, we compute current accuracy
             for x_train, y_train in zip(X, y):
                 # Classify using current weight...
-                z, p_cog, _ = self.classifier_function(x_train, weight, self.sigma_q_weights)            
+                z, p_cog, _ = self.classifier_function(vector_x=x_train, vector_w=weight, sigma_q_params=self.sigma_q_weights)            
                 
                 # ... and checks if we got it right
                 if z == y_train:
                     accuracy +=1
             
             # Computing actual accuracy...
-            accuracy = accuracy/len(X)
+            accuracy = accuracy/len(y)
             self.accuracy_during_training_.append(accuracy)
             ITERATION += 1
 
@@ -132,6 +132,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
 
             # In case reset weights is defined 
             if self.reset_weights_epoch != 0 and ITERATION % self.reset_weights_epoch == 0:
+                np.random.seed(self.random_seed)
                 weight = np.random.uniform(low=low, high=high, size=(dimensions,))
             
         self.accuracy_ = best_accuracy
@@ -160,7 +161,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
         # Classifies each instance
         outputs = []
         for x in X:                   
-            z, _, _ = self.classifier_function(x, self.weight_, self.sigma_q_weights)
+            z, _, _ = self.classifier_function(vector_x=x, vector_w=self.weight_, sigma_q_params=self.sigma_q_weights)
             outputs.append(z)
 
         # Returns either 0 or 1      
@@ -172,7 +173,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
         """
         outputs = []
         for x in X:                   
-            _, p_cog, _ = self.classifier_function(x, self.weight_, self.sigma_q_weights)
+            _, p_cog, _ = self.classifier_function(vector_x=x, vector_w=self.weight_, sigma_q_params=self.sigma_q_weights)
             outputs.append([1-p_cog.real, p_cog.real])
 
         # Returns the probability of being either 0 or 1           
