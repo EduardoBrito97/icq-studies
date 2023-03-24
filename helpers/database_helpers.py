@@ -4,7 +4,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import normalize
 from sklearn.metrics import f1_score, classification_report
 from sklearn import datasets
-#from imblearn.over_sampling import RandomOverSampler
+from imblearn.over_sampling import RandomOverSampler
 
 def replicate_classes(X, y, random_seed=42):
     """
