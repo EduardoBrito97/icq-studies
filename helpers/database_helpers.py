@@ -1,8 +1,5 @@
 import numpy as np
-from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sklearn.model_selection import StratifiedKFold
-from sklearn.preprocessing import normalize
-from sklearn.metrics import f1_score, classification_report
 from sklearn import datasets
 from imblearn.over_sampling import RandomOverSampler
 
