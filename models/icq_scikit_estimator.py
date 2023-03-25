@@ -1,9 +1,10 @@
 import sys
 import os
+import time
 sys.path.append(os.path.abspath('../helpers'))
 
 from helpers.database_helpers import replicate_classes
-from helpers.icq_methods import update_weights
+from helpers.icq_methods import update_weights, update_batched_weights
 from helpers.plot_graphs import plot_graph
 
 import numpy as np
@@ -33,6 +34,10 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
 
             plot_graphs_and_metrics (boolean): prints training best weights, accuracy and epoch x accuracy graph.
 
+            do_classes_refit (boolean): resamples classes in order to have same amount of 0s and 1s instances. See ../helpers/database_helpers.replicate_classes
+
+            batch (integer): batch size used during training.
+
             accuracys_during_training_ (array): accuracy throughout the training.
 
             X_ (array of arrays): instances attributes used for training.
@@ -52,7 +57,8 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
                  random_seed=1,
                  learning_rate=0.01,
                  plot_graphs_and_metrics=True,
-                 do_classes_refit=True):
+                 do_classes_refit=True,
+                 batch=1):
         self.accuracy_succ = accuracy_succ
         self.classifier_function = classifier_function
         self.max_iter = max_iter
@@ -62,6 +68,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
         self.learning_rate = learning_rate
         self.plot_graphs_and_metrics = plot_graphs_and_metrics
         self.do_classes_refit=do_classes_refit
+        self.batch = batch
 
     def fit(self, X, y):
         """
@@ -88,6 +95,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
         low = -1
         high = 1
         dimensions = len(X[0])
+        num_of_instances = len(X)
         
         # Setting random seed to have always same result
         np.random.seed(self.random_seed)
@@ -102,14 +110,19 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
         # Executing the training itself
         while accuracy < self.accuracy_succ and ITERATION < self.max_iter:
             accuracy = 0
-
+            accumulated_loss = np.zeros((dimensions))
+            
             # Training step
-            for x_train, y_train in zip(X, y):
+            for i, (x_train, y_train) in enumerate(zip(X, y)):
                 # Execute the classifier with the weights we have now...
                 z, p_cog, _ = self.classifier_function(vector_x=x_train, vector_w=weight, sigma_q_params=self.sigma_q_weights)
 
-                # Update weights based on the result
-                weight = update_weights(weight, y_train, z, x_train, p_cog, n=self.learning_rate)
+                accumulated_loss += (z - y_train) * x_train
+                if self.batch <= 1:
+                    weight = update_weights(weight, y_train, z, x_train, p_cog, n=self.learning_rate)
+                elif i % self.batch == 0 or i == num_of_instances - 1:
+                    weight = update_batched_weights(weight, accumulated_loss/self.batch, self.learning_rate)
+                    accumulated_loss = np.zeros((dimensions))
                 
             # After executing everything and updating the weights for the whole set example, we compute current accuracy
             for x_train, y_train in zip(X, y):

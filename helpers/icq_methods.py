@@ -138,10 +138,13 @@ def create_and_execute(vector_x,
     if split_input_weight:
         # We can either have Hadamard applied to each instance attribute...
         vector_x_norm = (np.linalg.norm(vector_x) + 1e-16)
+
+        # env = x1/norm(x) |0> + x2/norm(x) |1> .... + xn/norm(x) |n>
         p_env = np.array(vector_x).reshape((N, 1)) / vector_x_norm
         p_env = get_p(p_env)
     else:
         # ... or have as the original ICQ: Hadamard applied to a |00...0> gate
+        # Eq 25
         p_env = np.ones((N,1))/np.sqrt(N)
         p_env = get_p(p_env)
 
@@ -180,5 +183,21 @@ def update_weights(weights, y, z, x, p, n):
 
   # Eq 34
   weights = weights-n*(z-y)*loss_derivative_on_weight
+  weights[np.isnan(weights)] = 0
+  return weights
+
+def update_batched_weights(weights, accumulated_loss, n):
+  """
+    Updates the weights. Equation #34 in the Article.
+    
+    y is the expected classification [0, 1];
+    z is the actual classification [0, 1];
+    x is the attribute vector;
+    p is the probability of the class 1 (0, 1), powered to 2 (p²);
+    n is the learning rate.
+  """
+
+  # Eq 34
+  weights = weights-(n*accumulated_loss)
   weights[np.isnan(weights)] = 0
   return weights
