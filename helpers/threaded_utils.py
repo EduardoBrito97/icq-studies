@@ -37,7 +37,7 @@ def run_kfolds(classifier_function=None,
     scores = []
     f1scores = []
     ts = []
-    start = time.process_time()
+    start = time.time()
     for i_random_state in range(10, 70, 5):
         t = ReturningThread(target=execute_model, args=(i_random_state, classifier_function, sigma_q_weights, one_vs_classifier, max_iter, plot_graphs_in_classifier, print_each_fold_metric, print_avg_metric, learning_rate, accuracy_succ, dataset_load_method, refit_db))
         ts.append(t)
@@ -45,13 +45,19 @@ def run_kfolds(classifier_function=None,
         if len(ts) >= NUM_OF_THREADS:
             curr_scores, curr_f1scores = ts[0].join()
             ts.remove(ts[0])
-            print('Finished one thread after ', time.process_time() - start, "ms")
+            print('Finished one thread after ', time.time() - start, "ms")
+            start = time.time()
+
+            scores.append(curr_scores)
+            curr_f1scores.append(curr_f1scores)
     
     for t in ts:
         curr_scores, curr_f1scores = t.join()
+        print('Finished one thread after ', time.time() - start, "ms")
+        time.time()
+
         scores.append(curr_scores)
         f1scores.append(curr_f1scores)
-        print('Finished one thread after ', time.process_time() - start, "ms")
     
     print_metrics(scores, f1scores)
     return scores, f1scores
