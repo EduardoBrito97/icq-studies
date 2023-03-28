@@ -108,7 +108,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
         self.accuracy_during_training_ = []
         
         # Executing the training itself
-        while accuracy < self.accuracy_succ and ITERATION < self.max_iter:
+        while ITERATION < self.max_iter:
             accuracy = 0
             accumulated_loss = np.zeros((dimensions))
             
@@ -142,12 +142,7 @@ class IcqClassifier(ClassifierMixin, BaseEstimator):
             if (accuracy >= best_accuracy):
                 best_weight = weight
                 best_accuracy = accuracy
-
-            # In case reset weights is defined 
-            if self.reset_weights_epoch != 0 and ITERATION % self.reset_weights_epoch == 0:
-                np.random.seed(self.random_seed)
-                weight = np.random.uniform(low=low, high=high, size=(dimensions,))
-            
+        
         self.accuracy_ = best_accuracy
         self.weight_ = best_weight
         self.X_ = X
