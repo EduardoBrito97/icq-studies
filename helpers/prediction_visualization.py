@@ -95,7 +95,7 @@ def decision_visualization(clf, X, y):
     disp = DecisionBoundaryDisplay.from_estimator(
         clf,
         X,
-        response_method="decision_function",
+        response_method="predict",
         alpha=0.9,
         plot_method="contourf",
         cmap = "coolwarm"
