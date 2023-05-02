@@ -3,6 +3,8 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn import datasets
 from imblearn.over_sampling import RandomOverSampler
 
+replicate_classes = True
+
 def replicate_classes(X, y, random_seed=42):
     """
         Assumes that y is either 0 or 1, and tries to balance these two classes.
