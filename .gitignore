@@ -4,3 +4,4 @@ DishonestDataset/*
 dataset_evaluation/dishonest_dataset/DishonestDataset/*
 models/__pycache__/*
 dataset_evaluation/artificial_dataset/Datasets_template_exp/*
+*/__pycache__/*
