@@ -1,41 +1,11 @@
-import sys
-import os
-import time
-#sys.path.append(os.path.abspath('../helpers'))
-
 from database_helpers import replicate_classes
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.multiclass import OneVsRestClassifier
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import unique_labels
 import numpy as np
 from plot_graphs import plot_graph
 
 from training_methods import update_weights, update_batched_weights
-from sklearn.preprocessing import normalize
-from sklearn.metrics import f1_score, classification_report
-
-"""
-from helpers.icq_methods import update_weights, update_batched_weights
-from helpers.plot_graphs import plot_graph
-
-import numpy as np
-
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
-from sklearn.utils.multiclass import unique_labels
-
-import numpy as np
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.preprocessing import normalize
-from sklearn.metrics import f1_score, classification_report
-
-import sys
-import os
-sys.path.append(os.path.abspath('../models'))
-sys.path.append(os.path.abspath('../helpers'))
-from database_helpers import get_iris, get_wine, get_stratified_kfold
-from models.icq_scikit_estimator import IcqClassifier
-"""
 
 class IQCClassifier(ClassifierMixin, BaseEstimator):
     """
@@ -46,21 +16,21 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         Attributes:
             classifier_function (fun): check /helpers/icq_executions.py file to see available functions
 
-            accuracy_succ (float): accuracy considered as successful training.
+            dic_training_params["accuracy_succ"] (float): accuracy considered as successful training.
 
-            sigma_q_weights (4 sized array): weights for sigma Q sum. See ../helpers/icq_methods.get_weighted_sigmaQ for more info.
+            dic_training_params["sigma_q_params"] (4 sized array): weights for sigma Q sum. See ../helpers/icq_methods.get_weighted_sigmaQ for more info.
 
-            max_iter (int): max number of training epochs.
+            dic_training_params["max_iter"] (int): max number of training epochs.
 
-            reset_weights_epoch (int): max amount of epochs that a random weight should be trained. If reached, it will reset the weights to random numbers again and will keep training. If set to 0, it will never be reset.
+            dic_training_params["reset_weights_epoch"] (int): max amount of epochs that a random weight should be trained. If reached, it will reset the weights to random numbers again and will keep training. If set to 0, it will never be reset.
 
-            learning_rate (float): weights' learning accuracy.
+            dic_training_params["learning_rate"] (float): weights' learning accuracy.
 
-            plot_graphs_and_metrics (boolean): prints training best weights, accuracy and epoch x accuracy graph.
+            dic_training_params["plot_graphs_and_metrics"] (boolean): prints training best weights, accuracy and epoch x accuracy graph.
 
-            do_classes_refit (boolean): resamples classes in order to have same amount of 0s and 1s instances. See ../helpers/database_helpers.replicate_classes
+            dic_training_params["do_classes_refit"] (boolean): resamples classes in order to have same amount of 0s and 1s instances. See ../helpers/database_helpers.replicate_classes
 
-            batch (integer): batch size used during training.
+            dic_training_params["batch"] (integer): batch size used during training.
 
             accuracys_during_training_ (array): accuracy throughout the training.
 

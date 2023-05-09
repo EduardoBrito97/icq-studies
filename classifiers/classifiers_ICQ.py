@@ -11,10 +11,11 @@ def get_sigmaE(vector_x, vector_w):
 
 def get_weighted_sigmaQ(param):
     """
-        returns param[0]*sigmaX + param[1]*sigmaY + param[2]*sigmaZ to get sigmaQ.
+        returns param[0]*sigmaX + param[1]*sigmaY + param[2]*sigmaZ + param[3] * identity to get sigmaQ.
         - sigmaX comes from Equation #7 = [0, 1   1, 0]
         - sigmaY comes from Equation #8 = [0, -i  i, 0]
         - sigmaZ comes from Equation #9 = [1, 0   0, -1]
+        - identity is the matrix [1, 0  0, 1]
         Equivalent of Equation #16 in the Article.
     """
     sigmaX = np.array([[0,1], [1,0]])
@@ -31,6 +32,7 @@ def get_sigmaQ_from_polar_coord(param):
         - phi = param[2]
 
         returns (identity + (rx * sigmaX) + (ry * sigmaY) + (rz * sigmaZ))/2 to get sigmaQ.
+        - identity is the matrix [1, 0    0, 1]
         - sigmaX comes from Equation #7 = [0, 1   1, 0]
         - sigmaY comes from Equation #8 = [0, -i  i, 0]
         - sigmaZ comes from Equation #9 = [1, 0   0, -1]
@@ -88,14 +90,6 @@ def iqc_classifier(vector_x,
                         normalize_x=False, 
                         normalize_w=False,  
                         dic_classifier_params={}):
-    
-    if "sigma_q_params" in dic_classifier_params:
-        sigma_q_params=dic_classifier_params["sigma_q_params"]
-    if "use_polar_coordinates_on_sigma_q" in dic_classifier_params:
-        use_polar_coordinates_on_sigma_q = dic_classifier_params["use_polar_coordinates_on_sigma_q"]
-    
-    load_inputvector_env_state = dic_classifier_params["load_inputvector_env_state"]
-        
     """
         Applies the a modified version of ICQ classifier using only the math behind the Quantum Classifier described in Interactive Quantum Classifier Inspired by Quantum Open System Theory article. 
         
@@ -105,12 +99,24 @@ def iqc_classifier(vector_x,
         
         Works only for binary classifications, therefore, if the probability of class 0 is needed, it can be 1 - probability of being class 1.
 
+        There are a few possible keys for the dic_classifier_params:
+        - sigma_q_params (array) = weights used for calculating sigma_q
+        - use_polar_coordinates_on_sigma_q (boolean) = whether to calculate sigma_q using polar coordinates or weighted sum
+        - load_inputvector_env_state (boolean) = whether to load input vector on the environment state (True) or on sigma_e (False)
+
         To have the original ICQ Classifier, you can have:
         normalize_x = False
         normalize_w = False
-        split_input_weight = False
-        sigma_q_params = [1, 1, 1, 0]
+        dic_classifier_params["load_inputvector_env_state"] = False
+        dic_classifier_params["sigma_q_params"] = [1, 1, 1, 0]
     """
+    
+    if "sigma_q_params" in dic_classifier_params:
+        sigma_q_params = dic_classifier_params["sigma_q_params"]
+    if "use_polar_coordinates_on_sigma_q" in dic_classifier_params:
+        use_polar_coordinates_on_sigma_q = dic_classifier_params["use_polar_coordinates_on_sigma_q"]
+    
+    load_inputvector_env_state = dic_classifier_params["load_inputvector_env_state"]
 
     if normalize_x:
         vector_x = normalize(vector_x)
@@ -174,39 +180,3 @@ def iqc_classifier(vector_x,
     else:
         z = 1
     return z, p_cog_new_11_2, U_operator
-
-
-
-def update_weights(weights, y, z, x, p, n):
-  """
-    Updates the weights. Equation #34 in the Article.
-    
-    y is the expected classification [0, 1];
-    z is the actual classification [0, 1];
-    x is the attribute vector;
-    p is the probability of the class 1 (0, 1), powered to 2 (p²);
-    n is the learning rate.
-  """
-  # Eq 33
-  loss_derivative_on_weight = (1-p)*x
-
-  # Eq 34
-  weights = weights-n*(z-y)*loss_derivative_on_weight
-  weights[np.isnan(weights)] = 0
-  return weights
-
-def update_batched_weights(weights, accumulated_loss, n):
-  """
-    Updates the weights. Equation #34 in the Article.
-    
-    y is the expected classification [0, 1];
-    z is the actual classification [0, 1];
-    x is the attribute vector;
-    p is the probability of the class 1 (0, 1), powered to 2 (p²);
-    n is the learning rate.
-  """
-
-  # Eq 34
-  weights = weights-(n*accumulated_loss)
-  weights[np.isnan(weights)] = 0
-  return weights

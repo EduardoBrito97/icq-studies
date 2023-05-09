@@ -49,8 +49,6 @@ def execute_training_test_k_fold(
         Executes ICQ classifier against an dataset using classifier_function as classifier (see /helpers/icq_executions.py for more info).
         As for datasets, we need it to return a pair X, y. See database_helpers for examples
     """
-    # Loading dataset
-    #X, y = dataset_load_method()
 
     if "classical_classifier" in dic_training_params:
         classifier = dic_training_params["classifier"] 
@@ -76,9 +74,9 @@ def execute_training_test_k_fold(
         normalized_X_test  = normalize(X_test, axis=0)
         
         if classical_classifier: 
-            clf = OneVsRestClassifier(classifier).fit(normalized_X_train, y_train)  
+            clf = one_vs_classifier(classifier).fit(normalized_X_train, y_train)  
         else:
-            clf = OneVsRestClassifier(
+            clf = one_vs_classifier(
                     IQCClassifier(
                         classifier_function=classifier_function, 
                         dic_classifier_params=dic_classifier_params,

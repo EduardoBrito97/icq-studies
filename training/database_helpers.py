@@ -1,6 +1,4 @@
 import numpy as np
-from sklearn.model_selection import StratifiedKFold
-from sklearn import datasets
 from imblearn.over_sampling import RandomOverSampler
 
 def replicate_classes(X, y, random_seed=42):
@@ -38,9 +36,6 @@ def replicate_classes(X, y, random_seed=42):
         conX = np.concatenate((X, X[indices_to_replicate]), axis=0)
         conY = np.concatenate((y, y[indices_to_replicate]), axis=0)
         
-    
-        #indices_to_replicate = np.append(indices_to_replicate, [False for _ in range(len(X) - len(indices_to_replicate)) ])
-
     # In case we don't have a well behaved dataset, we get the database tuning attempt output and randomly replicate the minority class
     ros = RandomOverSampler(random_state=random_seed)
     conX, conY = ros.fit_resample(conX, conY)

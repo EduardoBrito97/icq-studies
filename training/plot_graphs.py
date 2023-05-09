@@ -13,6 +13,6 @@ def plot_graph(list_of_x, list_of_y, labelX, labelY):
     ax.set_ylabel(labelY)
     ax.yaxis.label.set_color('red')
     
-    plt.xticks(np.arange(min(list_of_x) * (-1), max(list_of_x), 1))
+    plt.xticks(np.arange(min(list_of_x) * (-1), max(list_of_x), 50))
     plt.yticks(np.arange(0, 1, 0.1))
     plt.show()
