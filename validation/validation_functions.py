@@ -62,6 +62,10 @@ def execute_training_test_k_fold(
     scores = []
     f1scores = []
 
+    normalize_axis = 0
+    if "normalize_axis" in dic_classifier_params:
+        normalize_axis = dic_classifier_params["normalize_axis"]
+
     # Training the classifier itself
     for i, (train_index, test_index) in enumerate(skf.split(X, y)):
         X_train = X[train_index]
@@ -70,8 +74,8 @@ def execute_training_test_k_fold(
         y_train = y[train_index]
         y_test = y[test_index]
 
-        normalized_X_train = normalize(X_train,axis=0) #default is 1 (by line)
-        normalized_X_test  = normalize(X_test, axis=0)
+        normalized_X_train = normalize(X_train,axis=normalize_axis) #default is 1 (by line)
+        normalized_X_test  = normalize(X_test, axis=normalize_axis)
         
         if classical_classifier: 
             clf = one_vs_classifier(classifier).fit(normalized_X_train, y_train)  
