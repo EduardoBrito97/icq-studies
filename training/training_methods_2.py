@@ -16,7 +16,11 @@ def update_weights(weights_list, y, z, x, p, n, coupling_constants):
     weights_list = np.array([weights_list], dtype=complex)
 
   losses = []
+  new_weights = []
   for index, weights in enumerate(weights_list):
+    # We need a new instance of the weights, otherwise we'll have problem
+    weights = weights.copy()
+
     # Current loss for this environment
     loss_derivative_on_weight = coupling_constants[index]*(1-p)*x
 
@@ -28,8 +32,10 @@ def update_weights(weights_list, y, z, x, p, n, coupling_constants):
     # Applying losses
     weights = weights-n*(z-y)*loss_derivative_on_weight
     weights[np.isnan(weights)] = 0
-    weights_list[index] = weights
-  return weights_list
+    
+    # Saving new weights list
+    new_weights.append(weights)
+  return new_weights
 
 def update_batched_weights(weights_list, accumulated_loss, n, coupling_constants):
   """
@@ -45,7 +51,11 @@ def update_batched_weights(weights_list, accumulated_loss, n, coupling_constants
     weights_list = np.array([weights_list], dtype=complex)
 
   losses = []
+  new_weights = []
   for index, weights in enumerate(weights_list):
+    # We need a new instance of the weights, otherwise we'll have problem
+    weights = weights.copy()
+
     # Current loss for this environment
     current_loss = coupling_constants[index]*accumulated_loss
 
@@ -57,5 +67,5 @@ def update_batched_weights(weights_list, accumulated_loss, n, coupling_constants
     # Eq 34
     weights = weights-(n*current_loss)
     weights[np.isnan(weights)] = 0
-    weights_list[index] = weights
-  return weights_list
+    new_weights.append(weights)
+  return new_weights
