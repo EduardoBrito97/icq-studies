@@ -128,7 +128,7 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
             ITERATION += 1
 
             # ... and checking if this is the best one so far
-            if (accuracy >= best_accuracy):
+            if (accuracy > best_accuracy):
                 best_weight = weight
                 best_accuracy = accuracy
         
@@ -160,7 +160,7 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         for x in X:                   
             z, _, _ = self.classifier_function(vector_x=x, vector_w=self.weight_, dic_classifier_params=self.dic_classifier_params)
             outputs.append(z)
-
+        
         # Returns either 0 or 1      
         return outputs
 
@@ -175,5 +175,3 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
 
         # Returns the probability of being either 0 or 1           
         return np.array(outputs)
-    
-
