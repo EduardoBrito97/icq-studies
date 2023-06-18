@@ -86,7 +86,7 @@ def normalize(x):
     return x / (np.linalg.norm(x) + 1e-16)
 
 def iqc_classifier(vector_x, 
-                        vector_w, 
+                        vector_ws, 
                         normalize_x=False, 
                         normalize_w=False,  
                         dic_classifier_params={}):
@@ -120,9 +120,7 @@ def iqc_classifier(vector_x,
 
     if normalize_x:
         vector_x = normalize(vector_x)
-    if normalize_w:
-        vector_w = normalize(vector_w)  
-
+    
     if (use_polar_coordinates_on_sigma_q):
         # Eq #16, but using polar coordinates so |sigmaQ| gets to be 1
         sigmaQ = get_sigmaQ_from_polar_coord(sigma_q_params)
@@ -130,45 +128,58 @@ def iqc_classifier(vector_x,
         # Eq #16
         sigmaQ = get_weighted_sigmaQ(sigma_q_params)
 
+    # We want to have multiple environments, thus we need to have a list of weights for each of them
+    if not(isinstance(vector_ws, (list, np.ndarray)) and all(isinstance(item, (list, np.ndarray)) for item in vector_ws)):
+        vector_ws = np.array(vector_ws, dtype=complex)
+    # We don't want to mix both proposed approach and multiple environments, as it'll be confusing
+    elif load_inputvector_env_state:
+        raise Exception("Not possible to load weights on env and have multiple envs!")
+
     # Eq #17
     N = len(vector_x)
 
-    # Equivalent to Eq #15
-    if load_inputvector_env_state:
-        # We can either keep only weights
-        sigmaE = np.diag(vector_w)
-    else:
-        # Or keep both as the original ICQ article
-        sigmaE = get_sigmaE(vector_x, vector_w)
-        
-    U_operator = get_U_operator(sigmaQ, sigmaE)
+    # Eq 25
+    p_env = np.ones((N,1))/np.sqrt(N)
+    p_env = get_p(p_env)
 
-    # Eq #18 applied on a Quantum state equivalent of Hadamard(|0>) = 1/sqrt(2) * (|0> + |1>)
+    # Our first p_cog will be the original one, but will change overtime
     p_cog = np.ones((2,1)) / np.sqrt(2) 
+    # Eq #18
     p_cog = get_p(p_cog)
 
-    # Eq #19 applied on a Quantum state equivalent of Hadamard(|00...0>) = 1/sqrt(N) * (|00...0> + ... + |11...1>)
-    if load_inputvector_env_state:
-        # We can either have Hadamard applied to each instance attribute...
-        vector_x_norm = (np.linalg.norm(vector_x) + 1e-16)
+    # We'll update the p_cog for every env we have
+    p_cog_new = p_cog
+    U_operators = []
+    for vector_w in vector_ws:
+        # Equivalent to Eq #15
+        if load_inputvector_env_state:
+            # We can either keep only weights (in case we have only one environment)
+            sigmaE = np.diag(vector_w)
+        else:
+            # Or keep both as the original ICQ article
+            sigmaE = get_sigmaE(vector_x, vector_w)
+        
+        U_operator = get_U_operator(sigmaQ, sigmaE)
+        U_operators.append(U_operator)
 
-        # env = x1/norm(x) |0> + x2/norm(x) |1> .... + xn/norm(x) |n>
-        p_env = np.array(vector_x).reshape((N, 1)) / vector_x_norm
-        p_env = get_p(p_env)
-    else:
-        # ... or have as the original ICQ: Hadamard applied to a |00...0> gate
-        # Eq 25
-        p_env = np.ones((N,1))/np.sqrt(N)
-        p_env = get_p(p_env)
+        # Eq #19 applied on a Quantum state equivalent of Hadamard(|00...0>) = 1/sqrt(N) * (|00...0> + ... + |11...1>)
+        if load_inputvector_env_state:
+            # We can either have Hadamard applied to each instance attribute...
+            vector_x_norm = (np.linalg.norm(vector_x) + 1e-16)
 
-    # Extracting p_cog and p_env kron
-    p_cog_env = np.kron(p_cog, p_env)
+            # env = x1/norm(x) |0> + x2/norm(x) |1> .... + xn/norm(x) |n>
+            p_env = np.array(vector_x).reshape((N, 1)) / vector_x_norm
+            p_env = get_p(p_env)
 
-    # First part of Equation #20 in the Article
-    quantum_operation = np.array(U_operator * p_cog_env * U_operator.getH())
+        # Extracting p_cog and p_env kron
+        p_cog_env = np.kron(p_cog_new, p_env)
 
-    # Second part of Equation #20 in the Article
-    p_cog_new = np.trace(quantum_operation.reshape([2,N,2,N]), axis1=1, axis2=3)
+        # First part of Equation #20 in the Article
+        quantum_operation = np.array(U_operator * p_cog_env * U_operator.getH())
+
+        # Second part of Equation #20 in the Article
+        # For multiple environemnts, this will be our new p_cog
+        p_cog_new = np.trace(quantum_operation.reshape([2,N,2,N]), axis1=1, axis2=3)
 
     # As the result is a diagonal matrix, the probability of being class 0 will be on position 0,0
     p_cog_new_00_2 = p_cog_new[0,0]
@@ -179,4 +190,4 @@ def iqc_classifier(vector_x,
         z = 0
     else:
         z = 1
-    return z, p_cog_new_11_2, U_operator
+    return z, p_cog_new_11_2, U_operators

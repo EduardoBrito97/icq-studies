@@ -5,7 +5,7 @@ from sklearn.utils.multiclass import unique_labels
 import numpy as np
 from plot_graphs import plot_graph
 
-from training_methods import update_weights, update_batched_weights
+from training_methods_2 import update_weights, update_batched_weights
 
 class IQCClassifier(ClassifierMixin, BaseEstimator):
     """
@@ -58,6 +58,10 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         self.plot_graphs_and_metrics = dic_training_params["plot_graphs_and_metrics"]
         self.do_classes_refit= dic_training_params["do_classes_refit"]
         self.batch = dic_training_params["batch"]
+        if "coupling_constants" in self.dic_training_params:
+            self.coupling_constants = dic_training_params["coupling_constants"]
+        else:
+            self.coupling_constants = [1]
 
     def fit(self, X, y):
         """
@@ -88,10 +92,12 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         
         # Setting random seed to have always same result
         np.random.seed(self.random_seed)
-        weight = np.random.uniform(low=low, high=high, size=(dimensions,))
+        weights = []
+        for _ in self.dic_training_params["coupling_constants"]:
+            weights.append(np.random.uniform(low=low, high=high, size=(dimensions,)))
         
         ITERATION = 0
-        best_weight = []
+        best_weight = [[]]
         best_accuracy = 0.0
         accuracy = 0
         self.accuracy_during_training_ = []
@@ -104,19 +110,19 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
             # Training step
             for i, (x_train, y_train) in enumerate(zip(X, y)):
                 # Execute the classifier with the weights we have now...
-                z, p_cog, _ = self.classifier_function(vector_x=x_train, vector_w=weight, dic_classifier_params=self.dic_classifier_params)
+                z, p_cog, _ = self.classifier_function(vector_x=x_train, vector_ws=weights, dic_classifier_params=self.dic_classifier_params)
 
                 accumulated_loss += (z - y_train) * x_train
                 if self.batch <= 1:
-                    weight = update_weights(weight, y_train, z, x_train, p_cog, n=self.learning_rate)
+                    weight = update_weights(weights, y_train, z, x_train, p_cog, n=self.learning_rate, coupling_constants=self.coupling_constants)
                 elif i % self.batch == 0 or i == num_of_instances - 1:
-                    weight = update_batched_weights(weight, accumulated_loss/self.batch, self.learning_rate)
+                    weight = update_batched_weights(weights, accumulated_loss/self.batch, self.learning_rate, coupling_constants=self.coupling_constants)
                     accumulated_loss = np.zeros((dimensions))
                 
             # After executing everything and updating the weights for the whole set example, we compute current accuracy
             for x_train, y_train in zip(X, y):
                 # Classify using current weight...
-                z, p_cog, _ = self.classifier_function(vector_x=x_train, vector_w=weight, dic_classifier_params=self.dic_classifier_params)            
+                z, p_cog, _ = self.classifier_function(vector_x=x_train, vector_ws=weights, dic_classifier_params=self.dic_classifier_params)            
                 
                 # ... and checks if we got it right
                 if z == y_train:
@@ -158,9 +164,9 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         # Classifies each instance
         outputs = []
         for x in X:                   
-            z, _, _ = self.classifier_function(vector_x=x, vector_w=self.weight_, dic_classifier_params=self.dic_classifier_params)
+            z, _, _ = self.classifier_function(vector_x=x, vector_ws=self.weight_, dic_classifier_params=self.dic_classifier_params)
             outputs.append(z)
-        
+
         # Returns either 0 or 1      
         return outputs
 
@@ -170,7 +176,7 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         """
         outputs = []
         for x in X:                   
-            _, p_cog, _ = self.classifier_function(vector_x=x, vector_w=self.weight_, dic_classifier_params=self.dic_classifier_params)
+            _, p_cog, _ = self.classifier_function(vector_x=x, vector_ws=self.weight_, dic_classifier_params=self.dic_classifier_params)
             outputs.append([1-p_cog.real, p_cog.real])
 
         # Returns the probability of being either 0 or 1           
