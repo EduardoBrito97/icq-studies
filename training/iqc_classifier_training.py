@@ -5,7 +5,7 @@ from sklearn.utils.multiclass import unique_labels
 import numpy as np
 from plot_graphs import plot_graph
 
-from training_methods_2 import update_weights, update_batched_weights
+from training_methods import update_weights, update_batched_weights
 
 class IQCClassifier(ClassifierMixin, BaseEstimator):
     """
