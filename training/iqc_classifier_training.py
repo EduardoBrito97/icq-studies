@@ -32,6 +32,8 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
 
             dic_training_params["batch"] (integer): batch size used during training.
 
+            dic_training_params["coupling_constants"] (array): coupling constants of each environment that will colide in the classifier
+
             accuracys_during_training_ (array): accuracy throughout the training.
 
             X_ (array of arrays): instances attributes used for training.
@@ -58,10 +60,9 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         self.plot_graphs_and_metrics = dic_training_params["plot_graphs_and_metrics"]
         self.do_classes_refit= dic_training_params["do_classes_refit"]
         self.batch = dic_training_params["batch"]
-        if "coupling_constants" in self.dic_training_params:
-            self.coupling_constants = dic_training_params["coupling_constants"]
-        else:
-            self.coupling_constants = [1]
+        if "coupling_constants" not in self.dic_training_params:
+            dic_training_params["coupling_constants"] = [1]
+        self.coupling_constants = dic_training_params["coupling_constants"]
 
     def fit(self, X, y):
         """

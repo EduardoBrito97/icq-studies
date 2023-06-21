@@ -1,13 +1,16 @@
 import numpy as np
 from scipy.linalg import expm as expMatrix
 
-def get_sigmaE(vector_x, vector_w):
+def get_sigmaE(vector_x, vector_w, dic_classifier_params):
     """
         Multiplies the input (vector_x) by the weights (vector_w), resulting in a diagonal matrix. 
         It discards any imaginary part vector_x and vector_w might have.
         Equivalent of Equation #17 in the Article.
     """
-    return np.diag(vector_x) * np.diag(vector_w)
+    if ("operation_for_sigma_e" in dic_classifier_params and dic_classifier_params["operation_for_sigma_e"] == "sum"):
+        return np.diag(vector_x) + np.diag(vector_w)
+    else:
+        return np.diag(vector_x) * np.diag(vector_w)
 
 def get_weighted_sigmaQ(param):
     """
@@ -22,7 +25,9 @@ def get_weighted_sigmaQ(param):
     sigmaY = np.array([[0,-1j], [1j,0]])
     sigmaZ = np.array([[1,0], [0,-1]])
     identity = np.array([[1, 0], [0, 1]])
-    return (param[0]*sigmaX) + (param[1]*sigmaY) + (param[2]*sigmaZ) + (param[3]*identity)
+    sigmaQ = (param[0]*sigmaX) + (param[1]*sigmaY) + (param[2]*sigmaZ) + (param[3]*identity)
+    sigmaq_trace = np.trace(sigmaQ)
+    return np.array(sigmaQ) / sigmaq_trace
 
 def get_sigmaQ_from_polar_coord(param):
     """
@@ -103,6 +108,7 @@ def iqc_classifier(vector_x,
         - sigma_q_params (array) = weights used for calculating sigma_q
         - use_polar_coordinates_on_sigma_q (boolean) = whether to calculate sigma_q using polar coordinates or weighted sum
         - load_inputvector_env_state (boolean) = whether to load input vector on the environment state (True) or on sigma_e (False)
+        - operation_for_sigma_e (string) = which operation will be used to combine weights and X for load_inputvector_env_state = False. For now, only "sum" and "mul" are available.
 
         To have the original ICQ Classifier, you can have:
         normalize_x = False
@@ -131,8 +137,9 @@ def iqc_classifier(vector_x,
     # We want to have multiple environments, thus we need to have a list of weights for each of them
     if not(isinstance(vector_ws, (list, np.ndarray)) and all(isinstance(item, (list, np.ndarray)) for item in vector_ws)):
         vector_ws = np.array(vector_ws, dtype=complex)
+    
     # We don't want to mix both proposed approach and multiple environments, as it'll be confusing
-    elif load_inputvector_env_state:
+    if load_inputvector_env_state and len(vector_ws) > 1:
         raise Exception("Not possible to load weights on env and have multiple envs!")
 
     # Eq #17
@@ -151,13 +158,16 @@ def iqc_classifier(vector_x,
     p_cog_new = p_cog
     U_operators = []
     for vector_w in vector_ws:
+        if normalize_w:
+            vector_w = normalize(vector_w)
+            
         # Equivalent to Eq #15
         if load_inputvector_env_state:
             # We can either keep only weights (in case we have only one environment)
             sigmaE = np.diag(vector_w)
         else:
             # Or keep both as the original ICQ article
-            sigmaE = get_sigmaE(vector_x, vector_w)
+            sigmaE = get_sigmaE(vector_x, vector_w, dic_classifier_params)
         
         U_operator = get_U_operator(sigmaQ, sigmaE)
         U_operators.append(U_operator)
