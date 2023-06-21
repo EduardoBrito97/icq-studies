@@ -115,9 +115,9 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
 
                 accumulated_loss += (z - y_train) * x_train
                 if self.batch <= 1:
-                    weight = update_weights(weights, y_train, z, x_train, p_cog, n=self.learning_rate, coupling_constants=self.coupling_constants)
+                    weights = update_weights(weights, y_train, z, x_train, p_cog, n=self.learning_rate, coupling_constants=self.coupling_constants)
                 elif i % self.batch == 0 or i == num_of_instances - 1:
-                    weight = update_batched_weights(weights, accumulated_loss/self.batch, self.learning_rate, coupling_constants=self.coupling_constants)
+                    weights = update_batched_weights(weights, accumulated_loss/self.batch, self.learning_rate, coupling_constants=self.coupling_constants)
                     accumulated_loss = np.zeros((dimensions))
                 
             # After executing everything and updating the weights for the whole set example, we compute current accuracy
@@ -136,7 +136,7 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
 
             # ... and checking if this is the best one so far
             if (accuracy > best_accuracy):
-                best_weight = weight
+                best_weight = weights
                 best_accuracy = accuracy
         
         self.accuracy_ = best_accuracy
