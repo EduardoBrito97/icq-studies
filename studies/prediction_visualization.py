@@ -108,6 +108,7 @@ def decision_visualization(clf, X, y, title = None, saveFigPath = None):
         disp.ax_.set_title(title)
     if (saveFigPath != None):
         plt.savefig(saveFigPath)
+        print("Saving picture", saveFigPath)
     plt.legend()
 
     plt.show()
