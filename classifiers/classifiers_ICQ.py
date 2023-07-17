@@ -28,7 +28,10 @@ def get_weighted_sigmaQ(param):
     identity = np.array([[1, 0], [0, 1]])
     sigmaQ = (param[0]*sigmaX) + (param[1]*sigmaY) + (param[2]*sigmaZ) + (param[3]*identity)
     sigmaq_trace = np.trace(sigmaQ)
-    return np.array(sigmaQ) / sigmaq_trace
+    if (sigmaq_trace > 0):
+        return np.array(sigmaQ) / sigmaq_trace
+    else:
+        return np.array(sigmaQ)
 
 def get_sigmaQ_from_polar_coord(param):
     """
