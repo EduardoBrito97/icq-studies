@@ -43,6 +43,8 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
             weight_ (array): best weights from training.
 
             accuracy_ (float): best accuracy from training.
+
+            negativity_ (array of floats): array of floats for each X passed in predict or predict_proba methods
     """
     def __init__(self, 
                  classifier_function, 
@@ -63,6 +65,7 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         if "coupling_constants" not in self.dic_training_params:
             dic_training_params["coupling_constants"] = [1]
         self.coupling_constants = dic_training_params["coupling_constants"]
+        self.negativity_ = []
 
     def fit(self, X, y):
         """
@@ -165,10 +168,13 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         # Classifies each instance
         outputs = []
         for x in X:                   
-            z, _, _ = self.classifier_function(vector_x=x, vector_ws=self.weight_, dic_classifier_params=self.dic_classifier_params)
-            outputs.append(z)
+            z, _, output_dict = self.classifier_function(vector_x=x, vector_ws=self.weight_, dic_classifier_params=self.dic_classifier_params)
 
-        # Returns either 0 or 1      
+            outputs.append(z)
+            self.negativity_.append(output_dict["negativity"])
+
+        # Returns either 0 or 1
+        print("negativity", self.negativity_)      
         return outputs
 
     def predict_proba(self, X):
@@ -177,8 +183,11 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         """
         outputs = []
         for x in X:                   
-            _, p_cog, _ = self.classifier_function(vector_x=x, vector_ws=self.weight_, dic_classifier_params=self.dic_classifier_params)
+            _, p_cog, output_dict = self.classifier_function(vector_x=x, vector_ws=self.weight_, dic_classifier_params=self.dic_classifier_params)
+
             outputs.append([1-p_cog.real, p_cog.real])
+            self.negativity_.append(output_dict["negativity"])
 
         # Returns the probability of being either 0 or 1           
+        print("negativity", self.negativity_)      
         return np.array(outputs)

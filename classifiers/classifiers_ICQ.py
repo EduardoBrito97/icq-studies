@@ -1,4 +1,5 @@
 import numpy as np
+from toqito import state_props
 from scipy.linalg import expm as expMatrix
 
 def get_sigmaE(vector_x, vector_w, dic_classifier_params):
@@ -90,6 +91,14 @@ def get_p(psi):
 def normalize(x):
     return x / (np.linalg.norm(x) + 1e-16)
 
+def get_negativity(rho):
+    """
+        Returns the Negativity associated with densitiy matrix rho.
+        See definition at: https://en.wikipedia.org/wiki/Negativity_(quantum_mechanics)
+        See implementation at: https://toqito.readthedocs.io/en/latest/_autosummary/toqito.state_props.negativity.html
+    """
+    return state_props.negativity(rho,2)
+
 def iqc_classifier(vector_x, 
                         vector_ws, 
                         normalize_x=False, 
@@ -115,6 +124,8 @@ def iqc_classifier(vector_x,
         normalize_w = False
         dic_classifier_params["load_inputvector_env_state"] = False
         dic_classifier_params["sigma_q_params"] = [1, 1, 1, 0]
+
+        returns (z, p_cog_new_11_2, )
     """
     
     if "sigma_q_params" in dic_classifier_params:
@@ -200,4 +211,8 @@ def iqc_classifier(vector_x,
         z = 0
     else:
         z = 1
-    return z, p_cog_new_11_2, U_operators
+
+    output_dict = {}
+    output_dict["U_operators"] = U_operators
+    output_dict["negativity"] = get_negativity(p_cog_new)
+    return z, p_cog_new_11_2, output_dict
