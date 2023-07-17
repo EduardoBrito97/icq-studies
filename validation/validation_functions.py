@@ -61,6 +61,7 @@ def execute_training_test_k_fold(
 
     scores = []
     f1scores = []
+    negativities = [[]]
 
     normalize_axis = 0
     if "normalize_axis" in dic_classifier_params:
@@ -90,15 +91,25 @@ def execute_training_test_k_fold(
         score = clf.score(normalized_X_test, y_test)
         f1score = f1_score(clf.predict(normalized_X_test), y_test, average='macro')
 
+        if not(classical_classifier):
+            while len(negativities) < len(clf.estimators_):
+                negativities.append([])
+            
+            index = 0
+            for estimator in clf.estimators_:
+                neg = np.mean(estimator.negativity_)
+                negativities[index].append(neg)
+                index = index + 1
+
         scores.append(score)
         f1scores.append(f1score)
 
         if print_each_fold_metric:
             y_pred = clf.predict(normalized_X_test)
-            print("K-Fold #" + str(i) + ":")
+            print("K-Fold #" + str(i) + ":", "Negativities:", [negs[-1] for negs in negativities])
             print(classification_report(y_test, y_pred))
             print("-------------------------------------------------------------------------------------------------------------------")
     
     if print_avg_metric:
-        print("AVG: Scores =", np.mean(scores), "F1-Scores =", np.mean(f1scores))
-    return scores, f1scores
+        print("AVG: Scores =", np.mean(scores), "F1-Scores =", np.mean(f1scores), "Negativity=", np.mean(negativities))
+    return scores, f1scores, negativities

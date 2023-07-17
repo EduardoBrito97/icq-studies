@@ -167,6 +167,7 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         
         # Classifies each instance
         outputs = []
+        self.negativity_ = []
         for x in X:                   
             z, _, output_dict = self.classifier_function(vector_x=x, vector_ws=self.weight_, dic_classifier_params=self.dic_classifier_params)
 
@@ -181,6 +182,7 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
             Returns the probability of each instance being of each class - either 0 or 1.
         """
         outputs = []
+        self.negativity_ = []
         for x in X:                   
             _, p_cog, output_dict = self.classifier_function(vector_x=x, vector_ws=self.weight_, dic_classifier_params=self.dic_classifier_params)
 
