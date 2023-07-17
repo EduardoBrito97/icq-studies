@@ -174,7 +174,6 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
             self.negativity_.append(output_dict["negativity"])
 
         # Returns either 0 or 1
-        print("negativity", self.negativity_)      
         return outputs
 
     def predict_proba(self, X):
@@ -189,5 +188,4 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
             self.negativity_.append(output_dict["negativity"])
 
         # Returns the probability of being either 0 or 1           
-        print("negativity", self.negativity_)      
         return np.array(outputs)
