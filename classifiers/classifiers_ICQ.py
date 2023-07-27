@@ -100,7 +100,7 @@ def get_negativity(rho):
         See definition at: https://en.wikipedia.org/wiki/Negativity_(quantum_mechanics)
         See implementation at: https://toqito.readthedocs.io/en/latest/_autosummary/toqito.state_props.negativity.html
     """
-    return state_props.negativity(rho,2)
+    return state_props.negativity(rho, 1)
 
 def iqc_classifier(vector_x, 
                         vector_ws, 
@@ -121,6 +121,7 @@ def iqc_classifier(vector_x,
         - use_polar_coordinates_on_sigma_q (boolean) = whether to calculate sigma_q using polar coordinates or weighted sum
         - load_inputvector_env_state (boolean) = whether to load input vector on the environment state (True) or on sigma_e (False)
         - operation_for_sigma_e (string) = which operation will be used to combine weights and X for load_inputvector_env_state = False. For now, only "sum" and "mul" are available.
+        - calculate_negativity (boolean) = enables the negativity calculation. Check https://en.wikipedia.org/wiki/Negativity_(quantum_mechanics). Uses Toqito implementation: https://toqito.readthedocs.io/en/latest/_autosummary/toqito.state_props.negativity.html
 
         To have the original ICQ Classifier, you can have:
         normalize_x = False
@@ -128,7 +129,11 @@ def iqc_classifier(vector_x,
         dic_classifier_params["load_inputvector_env_state"] = False
         dic_classifier_params["sigma_q_params"] = [1, 1, 1, 0]
 
-        returns (z, p_cog_new_11_2, )
+        returns (z, p_cog_new_11_2, output_dict)
+
+        output_dict contains:
+        - U_operators = list of used U_operators
+        - negativity = negativity associated with that entry
     """
     
     if "sigma_q_params" in dic_classifier_params:
@@ -217,5 +222,6 @@ def iqc_classifier(vector_x,
 
     output_dict = {}
     output_dict["U_operators"] = U_operators
-    output_dict["negativity"] = get_negativity(p_cog_new)
+    if "calculate_negativity" in dic_classifier_params and dic_classifier_params["calculate_negativity"]:
+        output_dict["negativity"] = get_negativity(p_cog_new)
     return z, p_cog_new_11_2, output_dict

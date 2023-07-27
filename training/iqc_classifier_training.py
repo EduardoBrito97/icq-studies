@@ -105,6 +105,8 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         best_accuracy = 0.0
         accuracy = 0
         self.accuracy_during_training_ = []
+        # There is no need to calculate negativity now, only on the Predict level
+        self.dic_classifier_params["calculate_negativity"] = False
         
         # Executing the training itself
         while ITERATION < self.max_iter:
@@ -168,6 +170,7 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         # Classifies each instance
         outputs = []
         self.negativity_ = []
+        self.dic_classifier_params["calculate_negativity"] = True
         for x in X:                   
             z, _, output_dict = self.classifier_function(vector_x=x, vector_ws=self.weight_, dic_classifier_params=self.dic_classifier_params)
 
@@ -183,6 +186,7 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         """
         outputs = []
         self.negativity_ = []
+        self.dic_classifier_params["calculate_negativity"] = True
         for x in X:                   
             _, p_cog, output_dict = self.classifier_function(vector_x=x, vector_ws=self.weight_, dic_classifier_params=self.dic_classifier_params)
 
