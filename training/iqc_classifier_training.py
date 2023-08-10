@@ -66,6 +66,7 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
             dic_training_params["coupling_constants"] = [1]
         self.coupling_constants = dic_training_params["coupling_constants"]
         self.negativity_ = []
+        self.entropy_ = []
 
     def fit(self, X, y):
         """
@@ -101,12 +102,13 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
             weights.append(np.random.uniform(low=low, high=high, size=(dimensions,)))
         
         ITERATION = 0
-        best_weight = [[]]
+        best_weight = None
         best_accuracy = 0.0
         accuracy = 0
         self.accuracy_during_training_ = []
-        # There is no need to calculate negativity now, only on the Predict level
+        # There is no need to calculate negativity nor entropy now, only on the Predict level
         self.dic_classifier_params["calculate_negativity"] = False
+        self.dic_classifier_params["calculate_entropy"] = False
         
         # Executing the training itself
         while ITERATION < self.max_iter:
@@ -124,7 +126,7 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
                 elif i % self.batch == 0 or i == num_of_instances - 1:
                     weights = update_batched_weights(weights, accumulated_loss/self.batch, self.learning_rate, coupling_constants=self.coupling_constants)
                     accumulated_loss = np.zeros((dimensions))
-                
+                    
             # After executing everything and updating the weights for the whole set example, we compute current accuracy
             for x_train, y_train in zip(X, y):
                 # Classify using current weight...
@@ -139,11 +141,11 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
             self.accuracy_during_training_.append(accuracy)
             ITERATION += 1
 
-            # ... and checking if this is the best one so far
-            if (accuracy > best_accuracy):
-                best_weight = weights
+            # ... and checking if this is the best one so far, or if it's the first iteration, take the weights even if accuracy is zero
+            if (accuracy > best_accuracy) or ITERATION == 1:
+                best_weight = weights.copy()
                 best_accuracy = accuracy
-        
+
         self.accuracy_ = best_accuracy
         self.weight_ = best_weight
         self.X_ = X
@@ -170,14 +172,19 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         # Classifies each instance
         outputs = []
         self.negativity_ = []
+        self.entropy_ = []
         self.dic_classifier_params["calculate_negativity"] = True
+        self.dic_classifier_params["calculate_entropy"] = True
         for x in X:                   
             z, _, output_dict = self.classifier_function(vector_x=x, vector_ws=self.weight_, dic_classifier_params=self.dic_classifier_params)
 
             outputs.append(z)
             self.negativity_.append(output_dict["negativity"])
+            self.entropy_.append(output_dict["entropy"])
 
         # Returns either 0 or 1
+        self.negativity_ = np.mean(self.negativity_)
+        self.entropy_ = np.mean(self.entropy_)
         return outputs
 
     def predict_proba(self, X):
@@ -186,12 +193,17 @@ class IQCClassifier(ClassifierMixin, BaseEstimator):
         """
         outputs = []
         self.negativity_ = []
+        self.entropy_ = []
         self.dic_classifier_params["calculate_negativity"] = True
+        self.dic_classifier_params["calculate_entropy"] = True
         for x in X:                   
             _, p_cog, output_dict = self.classifier_function(vector_x=x, vector_ws=self.weight_, dic_classifier_params=self.dic_classifier_params)
 
             outputs.append([1-p_cog.real, p_cog.real])
             self.negativity_.append(output_dict["negativity"])
+            self.entropy_.append(output_dict["entropy"])
 
-        # Returns the probability of being either 0 or 1           
+        # Returns the probability of being either 0 or 1
+        self.negativity_ = np.mean(self.negativity_)
+        self.entropy_ = np.mean(self.entropy_)           
         return np.array(outputs)

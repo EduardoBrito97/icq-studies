@@ -94,13 +94,21 @@ def get_p(psi):
 def normalize(x):
     return x / (np.linalg.norm(x) + 1e-16)
 
-def get_negativity(rho):
+def get_negativity(rho, dim):
     """
         Returns the Negativity associated with densitiy matrix rho.
         See definition at: https://en.wikipedia.org/wiki/Negativity_(quantum_mechanics)
         See implementation at: https://toqito.readthedocs.io/en/latest/_autosummary/toqito.state_props.negativity.html
     """
-    return state_props.negativity(rho, 1)
+    return state_props.negativity(rho, [2, 4])
+
+def get_entropy(rho):
+    """
+        Returns the Negativity associated with densitiy matrix rho.
+        See definition at: https://en.wikipedia.org/wiki/Negativity_(quantum_mechanics)
+        See implementation at: https://toqito.readthedocs.io/en/latest/_autosummary/toqito.state_props.von_neumann_entropy.html
+    """
+    return state_props.von_neumann_entropy(rho)
 
 def iqc_classifier(vector_x, 
                         vector_ws, 
@@ -134,6 +142,7 @@ def iqc_classifier(vector_x,
         output_dict contains:
         - U_operators = list of used U_operators
         - negativity = negativity associated with that entry
+        - entropy = entropy associated with that entry
     """
     
     if "sigma_q_params" in dic_classifier_params:
@@ -204,11 +213,11 @@ def iqc_classifier(vector_x,
         p_cog_env = np.kron(p_cog_new, p_env)
 
         # First part of Equation #20 in the Article
-        quantum_operation = np.array(U_operator * p_cog_env * U_operator.getH())
+        p_out = np.array(U_operator * p_cog_env * U_operator.getH())
 
         # Second part of Equation #20 in the Article
         # For multiple environemnts, this will be our new p_cog
-        p_cog_new = np.trace(quantum_operation.reshape([2,N,2,N]), axis1=1, axis2=3)
+        p_cog_new = np.trace(p_out.reshape([2,N,2,N]), axis1=1, axis2=3)
 
     # As the result is a diagonal matrix, the probability of being class 0 will be on position 0,0
     p_cog_new_00_2 = p_cog_new[0,0]
@@ -223,5 +232,7 @@ def iqc_classifier(vector_x,
     output_dict = {}
     output_dict["U_operators"] = U_operators
     if "calculate_negativity" in dic_classifier_params and dic_classifier_params["calculate_negativity"]:
-        output_dict["negativity"] = get_negativity(p_cog_new)
+        output_dict["negativity"] = get_negativity(p_out, [2, N])
+    if "calculate_entropy" in dic_classifier_params and dic_classifier_params["calculate_entropy"]:
+        output_dict["entropy"] = get_entropy(p_out)
     return z, p_cog_new_11_2, output_dict
