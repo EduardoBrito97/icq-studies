@@ -103,7 +103,7 @@ def execute_training_test_k_fold(
                 # so if we want to take average negativity of class 0 for all folds, we need to take mean(negativities[0]).
                 # Same goes for entropies
                 negativities[index].append(estimator.negativity_)
-                entropies[index].append(estimator.entropy_))
+                entropies[index].append(estimator.entropy_)
                 index = index + 1
 
         scores.append(score)
