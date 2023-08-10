@@ -86,7 +86,7 @@ def execute_training_test_k_fold(
                     IQCClassifier(
                         classifier_function=classifier_function, 
                         dic_classifier_params=dic_classifier_params,
-                        dic_training_params=dic_training_params), verbose=1).fit(normalized_X_train, y_train)
+                        dic_training_params=dic_training_params), n_jobs=-1, verbose=1).fit(normalized_X_train, y_train)
 
         score = clf.score(normalized_X_test, y_test)
         f1score = f1_score(clf.predict(normalized_X_test), y_test, average='macro')
@@ -103,7 +103,7 @@ def execute_training_test_k_fold(
                 # so if we want to take average negativity of class 0 for all folds, we need to take mean(negativities[0]).
                 # Same goes for entropies
                 negativities[index].append(estimator.negativity_)
-                entropies[index].append(estimator.entropy_)
+                entropies[index].append(estimator.entropy_))
                 index = index + 1
 
         scores.append(score)
