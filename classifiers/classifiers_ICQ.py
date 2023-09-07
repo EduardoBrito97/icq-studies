@@ -1,6 +1,10 @@
 import numpy as np
 from toqito import state_props
 from scipy.linalg import expm as expMatrix
+from sympy import Matrix
+
+def generate_output_matrix_string(matrix):
+    return str(Matrix(matrix)).replace("[", "{").replace("]", "}").replace("Matrix(", "").replace(")", "")
 
 def get_sigmaE(vector_x, vector_w, dic_classifier_params):
     """
@@ -100,7 +104,7 @@ def get_negativity(rho, dim):
         See definition at: https://en.wikipedia.org/wiki/Negativity_(quantum_mechanics)
         See implementation at: https://toqito.readthedocs.io/en/latest/_autosummary/toqito.state_props.negativity.html
     """
-    return state_props.negativity(rho, [2, 4])
+    return state_props.negativity(rho, dim)
 
 def get_entropy(rho):
     """
@@ -231,8 +235,52 @@ def iqc_classifier(vector_x,
 
     output_dict = {}
     output_dict["U_operators"] = U_operators
+    
     if "calculate_negativity" in dic_classifier_params and dic_classifier_params["calculate_negativity"]:
         output_dict["negativity"] = get_negativity(p_out, [2, N])
+
+        # with open('C:/Users/Eduardo Barreto/Desktop/Mestrado/icq-studies/experiments/Iris/Entanglement/in_out/evolution_calc.txt', 'a') as file:
+        #     string_to_write = "\nvector_x = " + generate_output_matrix_string(vector_x) + ";\n"\
+        #                     + "vector_w = " + generate_output_matrix_string(vector_w) + ";\n"\
+        #                     + "p_cog_new = " + generate_output_matrix_string(p_cog_new) + ";\n"
+        #     file.write(string_to_write)
+        #     file.write("\n")
+        #     file.write("\n")
+        #     file.write("\n")
+        #     file.write("--------------------------------------------------------------------------------------------------------")
+
+        # with open('C:/Users/Eduardo Barreto/Desktop/Mestrado/icq-studies/experiments/Iris/Entanglement/in_out/ins_and_outs.txt', 'a') as file:
+        #     string_to_write = "\nvector_x = " + generate_output_matrix_string(vector_x) + ";\n"\
+        #                     + "vector_w = " + generate_output_matrix_string(vector_w) + ";\n"\
+        #                     + "sigmaQ = " + generate_output_matrix_string(sigmaQ) + ";\n"\
+        #                     + "sigmaE = " + generate_output_matrix_string(sigmaE) + ";\n"\
+        #                     + "p_cog = " + generate_output_matrix_string(p_cog) + ";\n"\
+        #                     + "p_env = " + generate_output_matrix_string(p_env) + ";\n"\
+        #                     + "p_cog_env = " + generate_output_matrix_string(p_cog_env) + ";\n"\
+        #                     + "p_out = " + generate_output_matrix_string(p_out) + ";\n"\
+        #                     + "p_cog_new = " + generate_output_matrix_string(p_cog_new) + ";\n"
+        #     file.write(string_to_write)
+        #     file.write("\n")
+        #     file.write("\n")
+        #     file.write("\n")
+        #     file.write("--------------------------------------------------------------------------------------------------------")
+
+        # with open('C:/Users/Eduardo Barreto/Desktop/Mestrado/icq-studies/experiments/Iris/Entanglement/in_out/negativity.txt', 'a') as file:
+        #     string_to_write = "\np_out = " + generate_output_matrix_string(p_out) + ";\n\n - Negativity = " + str(output_dict["negativity"])
+        #     file.write(string_to_write)
+        #     file.write("\n")
+        #     file.write("\n")
+        #     file.write("\n")
+        #     file.write("--------------------------------------------------------------------------------------------------------")
+
     if "calculate_entropy" in dic_classifier_params and dic_classifier_params["calculate_entropy"]:
         output_dict["entropy"] = get_entropy(p_out)
+        
+        # with open('C:/Users/Eduardo Barreto/Desktop/Mestrado/icq-studies/experiments/Iris/Entanglement/in_out/entropy.txt', 'a') as file:
+        #     string_to_write = "\np_out = " + generate_output_matrix_string(p_out) + ";\n\n -Entropy = " + str(output_dict["entropy"])
+        #     file.write(string_to_write)
+        #     file.write("\n")
+        #     file.write("\n")
+        #     file.write("\n")
+        #     file.write("--------------------------------------------------------------------------------------------------------")
     return z, p_cog_new_11_2, output_dict
