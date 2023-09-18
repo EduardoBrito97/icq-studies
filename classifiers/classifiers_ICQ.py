@@ -134,6 +134,7 @@ def iqc_classifier(vector_x,
         - load_inputvector_env_state (boolean) = whether to load input vector on the environment state (True) or on sigma_e (False)
         - operation_for_sigma_e (string) = which operation will be used to combine weights and X for load_inputvector_env_state = False. For now, only "sum" and "mul" are available.
         - calculate_negativity (boolean) = enables the negativity calculation. Check https://en.wikipedia.org/wiki/Negativity_(quantum_mechanics). Uses Toqito implementation: https://toqito.readthedocs.io/en/latest/_autosummary/toqito.state_props.negativity.html
+        - ending_hadamard_gate (int) =  adds a Hadamard gate after the U operator
 
         To have the original ICQ Classifier, you can have:
         normalize_x = False
@@ -189,6 +190,26 @@ def iqc_classifier(vector_x,
     # We'll update the p_cog for every env we have
     p_cog_new = p_cog
     U_operators = []
+
+    # We might want to include the Hadamard gate in the end as well, so we might go ahead and calculate it
+    hadamard_gate_multiplier = 1
+    if "ending_hadamard_gate" in dic_classifier_params:
+        H = 1/np.sqrt(2)*np.matrix([[1,1],[1,-1]])
+        I = np.matrix([[1,0],[0,1]])
+        Ui = np.kron(I,I)
+
+        # If we want to attach the Hadamard in the first QuBit, we must do OutDensityMatrix (Hadamard (x) Identity (x) Identity )...
+        if dic_classifier_params["ending_hadamard_gate"] == 0:
+            hadamard_gate_multiplier = np.kron(H,Ui)
+        
+        # ... but if we want to attach the Hadamard in the second QuBit, we must do OutDensityMatrix (Identity (x) Hadamard (x) Identity )
+        elif dic_classifier_params["ending_hadamard_gate"] == 1:
+            hadamard_gate_multiplier = np.kron(np.kron(I, H), I)
+
+         # ... and if we want to attach the Hadamard in the third QuBit, we must do OutDensityMatrix (Identity (x) Identity (x) Hadamard)
+        elif dic_classifier_params["ending_hadamard_gate"] == 2:
+            hadamard_gate_multiplier = np.kron(Ui, H)
+
     for vector_w in vector_ws:
         if normalize_w:
             vector_w = normalize(vector_w)
@@ -202,6 +223,7 @@ def iqc_classifier(vector_x,
             sigmaE = get_sigmaE(vector_x, vector_w, dic_classifier_params)
         
         U_operator = get_U_operator(sigmaQ, sigmaE)
+        U_operator = np.dot(hadamard_gate_multiplier, U_operator)
         U_operators.append(U_operator)
 
         # Eq #19 applied on a Quantum state equivalent of Hadamard(|00...0>) = 1/sqrt(N) * (|00...0> + ... + |11...1>)
@@ -218,11 +240,11 @@ def iqc_classifier(vector_x,
 
         # First part of Equation #20 in the Article
         p_out = np.array(U_operator * p_cog_env * U_operator.getH())
-
+        
         # Second part of Equation #20 in the Article
         # For multiple environemnts, this will be our new p_cog
         p_cog_new = np.trace(p_out.reshape([2,N,2,N]), axis1=1, axis2=3)
-
+        
     # As the result is a diagonal matrix, the probability of being class 0 will be on position 0,0
     p_cog_new_00_2 = p_cog_new[0,0]
 
