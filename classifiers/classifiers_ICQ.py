@@ -4,7 +4,7 @@ from scipy.linalg import expm as expMatrix
 from sympy import Matrix
 
 def generate_output_matrix_string(matrix):
-    return str(Matrix(matrix)).replace("[", "{").replace("]", "}").replace("Matrix(", "").replace(")", "")
+    return str(Matrix(matrix)).replace("[", "{").replace("]", "}").replace("Matrix", "").replace("(", "").replace(")", "")
 
 def get_sigmaE(vector_x, vector_w, dic_classifier_params):
     """
@@ -15,7 +15,7 @@ def get_sigmaE(vector_x, vector_w, dic_classifier_params):
     if ("operation_for_sigma_e" in dic_classifier_params and dic_classifier_params["operation_for_sigma_e"] == "sum"):
         return np.diag(vector_x) + np.diag(vector_w)
     else:
-        return np.diag(vector_x) * np.diag(vector_w)
+        return np.multiply(np.diag(vector_x), vector_w.T)
 
 def get_weighted_sigmaQ(param):
     """
@@ -221,9 +221,11 @@ def iqc_classifier(vector_x,
         else:
             # Or keep both as the original ICQ article
             sigmaE = get_sigmaE(vector_x, vector_w, dic_classifier_params)
-        
+
         U_operator = get_U_operator(sigmaQ, sigmaE)
-        U_operator = np.dot(hadamard_gate_multiplier, U_operator)
+        
+        if "ending_hadamard_gate" in dic_classifier_params:
+            U_operator = np.dot(hadamard_gate_multiplier, U_operator)
         U_operators.append(U_operator)
 
         # Eq #19 applied on a Quantum state equivalent of Hadamard(|00...0>) = 1/sqrt(N) * (|00...0> + ... + |11...1>)
