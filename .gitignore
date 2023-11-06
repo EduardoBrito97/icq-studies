@@ -9,3 +9,6 @@ dataset_evaluation/artificial_dataset/Datasets_template_exp/*
 */*/*/*/*/Sigma*png
 experiments/pima/pima_dataset.csv
 experiments/pima/__pycache__/*
+experiments/Caesarian/caesarian.csv.arff
+experiments/Caesarian/caesarian.zip
+experiments/Caesarian/__pycache__/*
