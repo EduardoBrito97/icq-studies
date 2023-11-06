@@ -7,3 +7,5 @@ dataset_evaluation/artificial_dataset/Datasets_template_exp/*
 */__pycache__/*
 */*/*/Sigma*png
 */*/*/*/*/Sigma*png
+experiments/pima/pima_dataset.csv
+experiments/pima/__pycache__/*
