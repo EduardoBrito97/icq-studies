@@ -159,6 +159,8 @@ def iqc_classifier(vector_x,
 
     if normalize_x:
         vector_x = normalize(vector_x)
+    if "use_exponential_on_input" in dic_classifier_params and dic_classifier_params["use_exponential_on_input"]:
+        vector_x = np.exp(vector_x)
     
     if (use_polar_coordinates_on_sigma_q):
         # Eq #16, but using polar coordinates so |sigmaQ| gets to be 1
