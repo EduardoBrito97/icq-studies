@@ -135,6 +135,7 @@ def iqc_classifier(vector_x,
         - operation_for_sigma_e (string) = which operation will be used to combine weights and X for load_inputvector_env_state = False. For now, only "sum" and "mul" are available.
         - calculate_negativity (boolean) = enables the negativity calculation. Check https://en.wikipedia.org/wiki/Negativity_(quantum_mechanics). Uses Toqito implementation: https://toqito.readthedocs.io/en/latest/_autosummary/toqito.state_props.negativity.html
         - ending_hadamard_gate (int) =  adds a Hadamard gate after the U operator
+        - use_exponential_on_input (boolean) = does the Euler exponential on the input data after normalizing (if applied)
 
         To have the original ICQ Classifier, you can have:
         normalize_x = False
