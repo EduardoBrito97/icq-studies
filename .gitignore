@@ -5,8 +5,12 @@ dataset_evaluation/dishonest_dataset/DishonestDataset/*
 models/__pycache__/*
 dataset_evaluation/artificial_dataset/Datasets_template_exp/*
 */__pycache__/*
+*/Sigma*png
+*/*/Sigma*png
 */*/*/Sigma*png
+*/*/*/*/Sigma*png
 */*/*/*/*/Sigma*png
+*/*/*/*/*/*Sigma*png
 experiments/pima/pima_dataset.csv
 experiments/pima/__pycache__/*
 experiments/Caesarian/caesarian.csv.arff

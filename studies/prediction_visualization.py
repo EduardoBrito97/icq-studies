@@ -111,4 +111,4 @@ def decision_visualization(clf, X, y, title = None, saveFigPath = None):
         print("Saving picture", saveFigPath)
     plt.legend()
 
-    plt.show()
+    #plt.show()
